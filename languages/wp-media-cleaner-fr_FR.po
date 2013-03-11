@@ -1,0 +1,116 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: WP Category Switcher\n"
+"POT-Creation-Date: 2013-03-11 16:33+0900\n"
+"PO-Revision-Date: 2013-03-11 16:38+0900\n"
+"Last-Translator: Jordy Meow <work@meow.fr>\n"
+"Language-Team: Meow.fr <work@meow.fr>\n"
+"Language: English\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.5.5\n"
+"X-Poedit-KeywordsList: _e;__\n"
+"X-Poedit-Basepath: ../\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-SearchPath-0: .\n"
+
+#: wp-media-cleaner.php:49 wp-media-cleaner.php:65
+msgid "Status unknown."
+msgstr "Statut inconnu."
+
+#: wp-media-cleaner.php:85
+msgid "Items checked."
+msgstr "Fichiers vérifiés."
+
+#: wp-media-cleaner.php:99 wp-media-cleaner.php:117
+msgid "List generated."
+msgstr "Liste générée."
+
+#: wp-media-cleaner.php:134
+msgid "Lists generated."
+msgstr "Listes générées."
+
+#: wp-media-cleaner.php:395
+msgid "Related content not found."
+msgstr "Introuvable en DB."
+
+#: wp-media-cleaner.php:398
+msgid "Related content or media not found."
+msgstr "Pas de media associé, ni contenu."
+
+#: wp-media-cleaner.php:401
+msgid "Orphan retina file."
+msgstr "Retina orphelin."
+
+#: wp-media-cleaner.php:481
+msgid "Scan"
+msgstr "Scanner"
+
+#: wp-media-cleaner.php:484
+msgid "Delete"
+msgstr "Supprimer"
+
+#: wp-media-cleaner.php:486
+msgid "Recover"
+msgstr "Récupérer"
+
+#: wp-media-cleaner.php:490
+msgid "Reset"
+msgstr "Reset"
+
+#: wp-media-cleaner.php:494
+msgid "Recover all"
+msgstr "Tout récupérer"
+
+#: wp-media-cleaner.php:495
+msgid "Empty trash"
+msgstr "Vider la corbeille"
+
+#: wp-media-cleaner.php:497
+msgid "Delete all"
+msgstr "Tout supprimer"
+
+#: wp-media-cleaner.php:530
+msgid "Issues"
+msgstr "Problèmes"
+
+#: wp-media-cleaner.php:531
+msgid "Ignored"
+msgstr "Ignoré"
+
+#: wp-media-cleaner.php:532
+msgid "Trash"
+msgstr "Corbeille"
+
+#: wp-media-cleaner.php:609
+msgid ""
+"The directory for uploads is not writable. WP Media Cleaner will only be "
+"able to scan."
+msgstr ""
+"Le répertoire pour les uploads n'est pas accessible en écriture. WP Media "
+"Cleaner ne pourra en faire seulement que le scan."
+
+#~ msgid "The categories are both the same. Mmm. Please be careful!"
+#~ msgstr "Les catégories sont identiques... ohlala, faites-attention !"
+
+#~ msgid ""
+#~ "This plugin switches category 2 by 2. Doing that, you can change the way "
+#~ "WordPress picks the default category. This is particularly useful when a "
+#~ "post belongs to 2 or more categories. This plugin modifies directly the "
+#~ "ID's, which means you can uninstall it when you are done."
+#~ msgstr ""
+#~ "Ce plugin échange les ids des catégories deux par deux. Vous pourrez "
+#~ "ainsi changer la façon dont WordPress choisi les catégories par défaut "
+#~ "(très utile quand les posts appartiennent à deux catégories ou plus). Ce "
+#~ "plugin modifie les ids directement, il peut donc être désinstallé une "
+#~ "fois que l'opération est terminée."
+
+#~ msgid "Please backup your database before switching."
+#~ msgstr "Sauvegardez votre base de donnée avant d'utiliser cette fonction."
+
+#~ msgid "Categories (ordered by id's)"
+#~ msgstr "Catégories (triées par id)"
+
+#~ msgid "Switch:"
+#~ msgstr "Échanger :"
