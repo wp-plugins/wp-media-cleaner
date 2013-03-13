@@ -42,8 +42,7 @@ function wpmc_recover_all() {
 }
 
 function wpmc_recover_do(items, totalcount) {
-	var current = (totalcount - items.length);
-	jQuery('#wpmc_progression').text(current + "/" + totalcount);
+	wpmc_update_progress(totalcount - items.length, totalcount);
 	if (items.length > 0) {
 		newItems = wpmc_pop_array(items, 5);
 		data = { action: 'wpmc_recover_do', data: newItems };
@@ -91,9 +90,12 @@ function wpmc_delete_all(isTrash) {
 	});
 }
 
+function wpmc_update_progress(current, totalcount) {
+	jQuery('#wpmc_progression').text(current + "/" + totalcount + " (" + Math.round(current / totalcount * 100) + "%)");
+}
+
 function wpmc_delete_do(items, totalcount) {
-	var current = (totalcount - items.length);
-	jQuery('#wpmc_progression').text(current + "/" + totalcount);
+	wpmc_update_progress(totalcount - items.length, totalcount);
 	if (items.length > 0) {
 		newItems = wpmc_pop_array(items, 5);
 		data = { action: 'wpmc_delete_do', data: newItems };
@@ -132,8 +134,7 @@ function wpmc_scan() {
 }
 
 function wpmc_scan_do(files, medias, totalcount, totalissues) {
-	var current = (totalcount - (files.length + medias.length));
-	jQuery('#wpmc_progression').text(current + "/" + totalcount);
+	wpmc_update_progress((totalcount - (files.length + medias.length)), totalcount);
 	var data = {};
 	var expectedSuccess = 0;
 	if (files.length > 0) {

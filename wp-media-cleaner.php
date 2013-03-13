@@ -174,6 +174,7 @@ function wpmc_recover( $id ) {
 	global $wpdb;
 	$table_name = $wpdb->prefix . "wpmcleaner";
 	$issue = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table_name WHERE id = %d", $id ), OBJECT );
+	$issue->path = stripslashes( $issue->path );
 
 	if ( $issue->type != 0 )
 		die( "Wrong type! Recover only works with type 0." );
@@ -196,7 +197,8 @@ function wpmc_delete( $id ) {
 	global $wpdb;
 	$table_name = $wpdb->prefix . "wpmcleaner";
 	$issue = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table_name WHERE id = %d", $id ), OBJECT );
-	
+	$issue->path = stripslashes( $issue->path );
+
 	// Empty trash
 	if ( $issue->deleted == 1 ) {
 		$trashPath = trailingslashit( wpmc_trashdir() ) . $issue->path;
@@ -271,7 +273,7 @@ function wpmc_check_file( $path ) {
 	global $wpdb;
 	$filepath = wp_upload_dir();
 	$filepath = $filepath['basedir'];
-	$filepath = trailingslashit( $filepath ) . $path;
+	$filepath = trailingslashit( $filepath ) . stripslashes( $path );
 
 	// Retina support
 	if ( strpos( $path, '@2x.' ) !== false ) {
@@ -306,7 +308,7 @@ function wpmc_check_file( $path ) {
 			'time' => current_time('mysql'),
 			'type' => 0,
 			'path' => $path,
-			'size' => filesize ($filepath ),
+			'size' => filesize ($filepath),
 			'issue' => 'NO_POST_NO_MEDIA'
 		) 
 	);
@@ -517,21 +519,25 @@ function wpmc_screen() {
 		<div style='margin-top: 12px; background: #EEE; padding: 5px; border-radius: 4px; height: 24px; box-shadow: 0px 0px 3px #575757;'>
 			
 			<!-- SCAN -->
-			<a id='wpmc_scan' onclick='wpmc_scan()' class='button-primary' style='float: left;'><img style='position: relative; top: 3px; left: -2px; margin-right: 3px; width: 16px; height: 16px;' src='<?php echo trailingslashit( WP_PLUGIN_URL ) . trailingslashit( 'wp-media-cleaner/img'); ?>search.png' /><?php _e("Scan", 'wp-media-cleaner'); ?></a>
-			
+			<?php if ( $view != 'deleted' ) { ?>
+				<a id='wpmc_scan' onclick='wpmc_scan()' class='button-primary' style='float: left;'><img style='position: relative; top: 3px; left: -2px; margin-right: 3px; width: 16px; height: 16px;' src='<?php echo trailingslashit( WP_PLUGIN_URL ) . trailingslashit( 'wp-media-cleaner/img'); ?>search.png' /><?php _e("Scan", 'wp-media-cleaner'); ?></a>
+			<?php } ?>
+
 			<!-- DELETE SELECTED -->		
 			<a id='wpmc_delete' onclick='wpmc_delete()' class='button' style='float: left; margin-left: 5px;'><img style='position: relative; top: 3px; left: -2px; margin-right: 3px; width: 16px; height: 16px;' src='<?php echo trailingslashit( WP_PLUGIN_URL ) . trailingslashit( 'wp-media-cleaner/img'); ?>delete.png' /><?php _e("Delete", 'wp-media-cleaner'); ?></a>
 			<?php if ( $view == 'deleted' ) { ?>
-				<a id='wpmc_recover' onclick='wpmc_recover()' class='button' style='float: left; margin-left: 5px;'><img style='position: relative; top: 3px; left: -2px; margin-right: 3px; width: 16px; height: 16px;' src='<?php echo trailingslashit( WP_PLUGIN_URL ) . trailingslashit( 'wp-media-cleaner/img'); ?>pills.png' /><?php _e("Recover", 'wp-media-cleaner'); ?></a>
+				<a id='wpmc_recover' onclick='wpmc_recover()' class='button-secondary' style='float: left; margin-left: 5px;'><img style='position: relative; top: 3px; left: -2px; margin-right: 3px; width: 16px; height: 16px;' src='<?php echo trailingslashit( WP_PLUGIN_URL ) . trailingslashit( 'wp-media-cleaner/img'); ?>pills.png' /><?php _e("Recover", 'wp-media-cleaner'); ?></a>
 			<?php } ?>
 
 			<!-- RESET -->
-			<a id='wpmc_reset' href='?page=wp-media-cleaner&reset=1' class='button-secondary' style='float: right; margin-left: 5px;'><img style='position: relative; top: 3px; left: -2px; margin-right: 3px; width: 16px; height: 16px;' src='<?php echo trailingslashit( WP_PLUGIN_URL ) . trailingslashit( 'wp-media-cleaner/img'); ?>burn.png' /><?php _e("Reset", 'wp-media-cleaner'); ?></a>
-			
+			<?php if ( $view != 'deleted' ) { ?>
+				<a id='wpmc_reset' href='?page=wp-media-cleaner&reset=1' class='button-primary' style='float: right; margin-left: 5px;'><img style='position: relative; top: 3px; left: -2px; margin-right: 3px; width: 16px; height: 16px;' src='<?php echo trailingslashit( WP_PLUGIN_URL ) . trailingslashit( 'wp-media-cleaner/img'); ?>burn.png' /><?php _e("Reset", 'wp-media-cleaner'); ?></a>
+			<?php } ?>
+
 			<!-- DELETE ALL -->
 			<?php if ( $view == 'deleted' ) { ?>
-				<a id='wpmc_recover_all' onclick='wpmc_recover_all()' class='button' style='float: right; margin-left: 5px;'><img style='position: relative; top: 3px; left: -2px; margin-right: 3px; width: 16px; height: 16px;' src='<?php echo trailingslashit( WP_PLUGIN_URL ) . trailingslashit( 'wp-media-cleaner/img'); ?>pills.png' /><?php _e("Recover all", 'wp-media-cleaner'); ?></a>
-				<a id='wpmc_delete_all' onclick='wpmc_delete_all(true)' class='button' style='float: right; margin-left: 5px;'><img style='position: relative; top: 3px; left: -2px; margin-right: 3px; width: 16px; height: 16px;' src='<?php echo trailingslashit( WP_PLUGIN_URL ) . trailingslashit( 'wp-media-cleaner/img'); ?>trash.png' /><?php _e("Empty trash", 'wp-media-cleaner'); ?></a>				
+				<a id='wpmc_recover_all' onclick='wpmc_recover_all()' class='button-primary' style='float: right; margin-left: 5px;'><img style='position: relative; top: 3px; left: -2px; margin-right: 3px; width: 16px; height: 16px;' src='<?php echo trailingslashit( WP_PLUGIN_URL ) . trailingslashit( 'wp-media-cleaner/img'); ?>pills.png' /><?php _e("Recover all", 'wp-media-cleaner'); ?></a>
+				<a id='wpmc_delete_all' onclick='wpmc_delete_all(true)' class='button button-red' style='float: right; margin-left: 5px;'><img style='position: relative; top: 3px; left: -2px; margin-right: 3px; width: 16px; height: 16px;' src='<?php echo trailingslashit( WP_PLUGIN_URL ) . trailingslashit( 'wp-media-cleaner/img'); ?>trash.png' /><?php _e("Empty trash", 'wp-media-cleaner'); ?></a>				
 			<?php } else { ?>
 				<a id='wpmc_delete_all' onclick='wpmc_delete_all()' class='button button-red' style='float: right; margin-left: 5px;'><img style='position: relative; top: 3px; left: -2px; margin-right: 3px; width: 16px; height: 16px;' src='<?php echo trailingslashit( WP_PLUGIN_URL ) . trailingslashit( 'wp-media-cleaner/img'); ?>delete.png' /><?php _e("Delete all", 'wp-media-cleaner'); ?></a>
 			<?php } ?>
@@ -547,7 +553,7 @@ function wpmc_screen() {
 			</form>
 
 			<!-- PROGRESS -->
-			<span style='margin-left: 12px; font-size: 12px; top: 5px; position: relative; color: #9C9C9C;' id='wpmc_progression'></span>	
+			<span style='margin-left: 12px; font-size: 15px; top: 5px; position: relative; color: #747474;' id='wpmc_progression'></span>	
 
 		</div>
 
@@ -590,7 +596,7 @@ function wpmc_screen() {
 					<td><input type="checkbox" name="id" value="<?php echo $issue->id ?>"></td>
 					<td><?php echo $issue->type == 0 ? 'FILE' : 'MEDIA'; ?></td>
 					<td><?php echo $issue->type == 0 ? 'Filesystem' : ("<a href='media.php?attachment_id=" . $issue->postId . "&action=edit'>ID " . $issue->postId . "</a>"); ?></td>
-					<td><?php echo $issue->path; ?></td>
+					<td><?php echo stripslashes( $issue->path ); ?></td>
 					<td><?php echo_issue( $issue->issue ); ?></td>
 					<td style='text-align: right;'><?php echo number_format( $issue->size / 1000, 2 ); ?> KO</td>
 				</tr>
