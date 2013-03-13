@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_i
 Tags: management, admin, file, files, images, image, media, libary, upload, clean, cleaning
 Requires at least: 3.5
 Tested up to: 3.5
-Stable tag: 1.0.0
+Stable tag: 1.2.0
 
 Help you cleaning your Uploads Directory and your Media Library.
 
@@ -45,6 +45,11 @@ Please contact me through my website <a href='http://www.totorotimes.com'>Totoro
 1. Media -> Clean
 
 == Changelog ==
+
+= 1.2.0 =
+* Add: options (scan files / scan media).
+* Fix: mkdir issues.
+* Change: operations are buffered by 5 (faster).
 
 = 0.1.0 =
 * First release.

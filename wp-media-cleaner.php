@@ -3,7 +3,7 @@
 Plugin Name: WP Media Cleaner
 Plugin URI: http://www.meow.fr/wp-media-cleaner
 Description: Clean your Media Library and Uploads Folder.
-Version: 1.0.0
+Version: 1.2.0
 Author: Jordy Meow
 Author URI: http://www.meow.fr
 
@@ -29,6 +29,7 @@ register_activation_hook( __FILE__, 'wpmc_activate' );
 register_deactivation_hook( __FILE__, 'wpmc_desactivate' );
 
 require( 'jordy_meow_footer.php' );
+require( 'wpmc_settings.php' );
 
 /**
  *
@@ -37,11 +38,13 @@ require( 'jordy_meow_footer.php' );
  */
 
 function wpmc_wp_ajax_wpmc_delete_do () {
+	ob_start();
 	$data = $_POST['data'];
-	$success = true;
+	$success = 0;
 	foreach ( $data as $piece ) {
-		$success = $success && wpmc_delete( $data );
+		$success += ( wpmc_delete( $piece ) ? 1 : 0 );
 	}
+	ob_end_clean();
 	echo json_encode( 
 		array(
 			'success' => true,
@@ -53,11 +56,13 @@ function wpmc_wp_ajax_wpmc_delete_do () {
 }
 
 function wpmc_wp_ajax_wpmc_recover_do () {
+	ob_start();
 	$data = $_POST['data'];
-	$success = true;
+	$success = 0;
 	foreach ( $data as $piece ) {
-		$success = $success && wpmc_recover( $data );
+		$success +=  ( wpmc_recover( $piece ) ? 1 : 0 );
 	}
+	ob_end_clean();
 	echo json_encode( 
 		array(
 			'success' => true,
@@ -69,9 +74,11 @@ function wpmc_wp_ajax_wpmc_recover_do () {
 }
 
 function wpmc_wp_ajax_wpmc_scan_do () {
+	ob_start();
 	$type = $_POST['type'];
 	$data = $_POST['data'];
 	$success = 0;
+	ob_end_clean();
 	foreach ( $data as $piece ) {
 		if ( $type == 'file' )
 			$success +=  ( wpmc_check_file( $piece ) ? 1 : 0 );
@@ -125,8 +132,17 @@ function wpmc_wp_ajax_wpmc_scan () {
 	$library = $_POST['library'];
 	$upload = $_POST['upload'];
 	$upload_folder = wp_upload_dir();
-	$files = wpmc_list_uploaded_files( $upload_folder['basedir'], $upload_folder['basedir'] );
-	$medias = $wpdb->get_col( "SELECT p.ID FROM $wpdb->posts p WHERE post_status = 'inherit' AND post_type = 'attachment'" );
+
+	if ( wpmc_getoption( 'scan_files', 'wpmc_basics' ) )
+		$files = wpmc_list_uploaded_files( $upload_folder['basedir'], $upload_folder['basedir'] );
+	else
+		$files = array();
+
+	if ( wpmc_getoption( 'scan_media', 'wpmc_basics' ) )
+		$medias = $wpdb->get_col( "SELECT p.ID FROM $wpdb->posts p WHERE post_status = 'inherit' AND post_type = 'attachment'" );
+	else
+		$medias = array();
+
 	echo json_encode( 
 		array(
 			'results' => array( 'files' => $files, 'medias' => $medias ),
@@ -166,7 +182,7 @@ function wpmc_recover( $id ) {
 	$originalPath = trailingslashit( $basedir['basedir'] ) . $issue->path;
 	$trashPath = trailingslashit( wpmc_trashdir() ) . $issue->path;
 	$path_parts = pathinfo( $originalPath );
-	if ( !file_exists( $path_parts['dirname'] ) && !mkdir( $path_parts['dirname'], 0, true ) ) {
+	if ( !file_exists( $path_parts['dirname'] ) && !wp_mkdir_p( $path_parts['dirname'] ) ) {
 		die('Failed to create folder.');
 	}
 	if ( !rename( $trashPath, $originalPath ) ) {
@@ -197,12 +213,18 @@ function wpmc_delete( $id ) {
 		$originalPath = trailingslashit( $basedir['basedir'] ) . $issue->path;
 		$trashPath = trailingslashit( wpmc_trashdir() ) . $issue->path;
 		$path_parts = pathinfo( $trashPath );
-		if ( !file_exists( $path_parts['dirname'] ) && !mkdir( $path_parts['dirname'], 0, true ) ) {
-			die('Failed to create folder.');
+
+		try {
+			if ( !file_exists( $path_parts['dirname'] ) && !wp_mkdir_p( $path_parts['dirname'] ) ) {
+				return false;
+			}
+			// Rename the file (move). 'is_dir' is just there for security (no way we should move a whole directory)
+			if ( is_dir( $originalPath ) || !rename( $originalPath, $trashPath ) ) {
+				return false;
+			}
 		}
-		// Rename the file (move). 'is_dir' is just there for security (no way we should move a whole directory)
-		if ( is_dir( $originalPath ) || !rename( $originalPath, $trashPath ) ) {
-			die('Failed to move the file.');
+		catch (Exception $e) {
+			return false;
 		}
 		$wpdb->query( $wpdb->prepare( "UPDATE $table_name SET deleted = 1 WHERE id = %d", $id ) );
 		return true;
@@ -410,6 +432,23 @@ function wpmc_screen() {
 		<?php jordy_meow_donation(); ?>
 		<div id="icon-upload" class="icon32"><br></div>
 		<h2>WP Media Cleaner</h2>
+
+		<?php
+
+			$scan_files = wpmc_getoption( 'scan_files', 'wpmc_basics' );
+			$scan_media = wpmc_getoption( 'scan_media', 'wpmc_basics' );
+
+			echo "<p>";
+			if ( !$scan_files && !$scan_media ) {
+				_e( "Scan is not enabled for either the files or the medias. Please check Settings > WP Media Cleaner.", 'wp-media-cleaner' ); 
+			}
+			if ( $scan_media ) {
+				_e( "Be aware that a media will be considered <b>NOT</b> an issue <b>ONLY IF</b> it is found in the Posts or Pages, and not in a Gallery. The deletion of a media is also <b>PERMANENT</b>.", 'wp-media-cleaner' ); 
+			}
+			echo "</p>";
+
+		?>
+
 		<?php 
 			global $wpdb;
 			$posts_per_page = 15; 
@@ -578,6 +617,7 @@ function wpmc_screen() {
 function wpmc_admin_menu() {
 	load_plugin_textdomain( 'wp-media-cleaner', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
 	add_media_page( 'WP Media Cleaner', 'Clean', 'manage_options', 'wp-media-cleaner', 'wpmc_screen' );
+	add_options_page( 'WP Media Cleaner', 'WP Media Cleaner', 'manage_options', 'wpmc_settings', 'wpmc_settings_page' );
 }
 
 function wpmc_reset () {

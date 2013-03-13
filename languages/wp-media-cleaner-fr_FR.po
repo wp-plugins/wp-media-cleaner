@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: WP Category Switcher\n"
-"POT-Creation-Date: 2013-03-11 16:33+0900\n"
-"PO-Revision-Date: 2013-03-11 16:38+0900\n"
+"POT-Creation-Date: 2013-03-13 10:23+0900\n"
+"PO-Revision-Date: 2013-03-13 10:26+0900\n"
 "Last-Translator: Jordy Meow <work@meow.fr>\n"
 "Language-Team: Meow.fr <work@meow.fr>\n"
 "Language: English\n"
@@ -15,81 +15,119 @@ msgstr ""
 "X-Poedit-SourceCharset: UTF-8\n"
 "X-Poedit-SearchPath-0: .\n"
 
-#: wp-media-cleaner.php:49 wp-media-cleaner.php:65
+#: wp-media-cleaner.php:52 wp-media-cleaner.php:70
 msgid "Status unknown."
 msgstr "Statut inconnu."
 
-#: wp-media-cleaner.php:85
+#: wp-media-cleaner.php:92
 msgid "Items checked."
 msgstr "Fichiers vérifiés."
 
-#: wp-media-cleaner.php:99 wp-media-cleaner.php:117
+#: wp-media-cleaner.php:106 wp-media-cleaner.php:124
 msgid "List generated."
 msgstr "Liste générée."
 
-#: wp-media-cleaner.php:134
+#: wp-media-cleaner.php:150
 msgid "Lists generated."
 msgstr "Listes générées."
 
-#: wp-media-cleaner.php:395
+#: wp-media-cleaner.php:417
 msgid "Related content not found."
 msgstr "Introuvable en DB."
 
-#: wp-media-cleaner.php:398
+#: wp-media-cleaner.php:420
 msgid "Related content or media not found."
 msgstr "Pas de media associé, ni contenu."
 
-#: wp-media-cleaner.php:401
+#: wp-media-cleaner.php:423
 msgid "Orphan retina file."
 msgstr "Retina orphelin."
 
-#: wp-media-cleaner.php:481
+#: wp-media-cleaner.php:443
+msgid ""
+"Scan is not enabled for either the files or the medias. Please check "
+"Settings > WP Media Cleaner."
+msgstr ""
+"Le scan n'est pas activé ni pour les fichier ni pour les médias. Vérifiez "
+"les paramètres de WP Media Cleaner."
+
+#: wp-media-cleaner.php:446
+msgid ""
+"Be aware that a media will be considered <b>NOT</b> an issue <b>ONLY IF</b> "
+"it is found in the Posts or Pages, and not in a Gallery. The deletion of a "
+"media is also <b>PERMANENT</b>."
+msgstr ""
+"Attention, un media ne sera pas considéré comme un problème <b>seulement "
+"dans le cas où</b> il est présent dans les Posts ou les Pages, mais pas dans "
+"les Galleries ! La suppression des médias est aussi <b>irrémédiable</b>."
+
+#: wp-media-cleaner.php:520
 msgid "Scan"
 msgstr "Scanner"
 
-#: wp-media-cleaner.php:484
+#: wp-media-cleaner.php:523
 msgid "Delete"
 msgstr "Supprimer"
 
-#: wp-media-cleaner.php:486
+#: wp-media-cleaner.php:525
 msgid "Recover"
 msgstr "Récupérer"
 
-#: wp-media-cleaner.php:490
+#: wp-media-cleaner.php:529
 msgid "Reset"
 msgstr "Reset"
 
-#: wp-media-cleaner.php:494
+#: wp-media-cleaner.php:533
 msgid "Recover all"
 msgstr "Tout récupérer"
 
-#: wp-media-cleaner.php:495
+#: wp-media-cleaner.php:534
 msgid "Empty trash"
 msgstr "Vider la corbeille"
 
-#: wp-media-cleaner.php:497
+#: wp-media-cleaner.php:536
 msgid "Delete all"
 msgstr "Tout supprimer"
 
-#: wp-media-cleaner.php:530
+#: wp-media-cleaner.php:569
 msgid "Issues"
 msgstr "Problèmes"
 
-#: wp-media-cleaner.php:531
+#: wp-media-cleaner.php:570
 msgid "Ignored"
 msgstr "Ignoré"
 
-#: wp-media-cleaner.php:532
+#: wp-media-cleaner.php:571
 msgid "Trash"
 msgstr "Corbeille"
 
-#: wp-media-cleaner.php:609
+#: wp-media-cleaner.php:649
 msgid ""
 "The directory for uploads is not writable. WP Media Cleaner will only be "
 "able to scan."
 msgstr ""
 "Le répertoire pour les uploads n'est pas accessible en écriture. WP Media "
 "Cleaner ne pourra en faire seulement que le scan."
+
+#: wpmc_settings.php:37
+msgid "Basics"
+msgstr "Base"
+
+#: wpmc_settings.php:45
+msgid "Scan Media"
+msgstr "Scan Medias"
+
+#: wpmc_settings.php:46
+msgid "The Media Library will be scanned."
+msgstr "La Bibliothèque sera scannée."
+
+#: wpmc_settings.php:52
+msgid "Scan Files"
+msgstr "Scan Uploads"
+
+#: wpmc_settings.php:53
+msgid "The Uploads folder will be scanned."
+msgstr "Les fichiers uploadés seront scannés."
 
 #~ msgid "The categories are both the same. Mmm. Please be careful!"
 #~ msgstr "Les catégories sont identiques... ohlala, faites-attention !"
