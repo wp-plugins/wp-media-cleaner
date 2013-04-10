@@ -269,6 +269,25 @@ function wpmc_list_uploaded_files( $basedir, $dir ) {
 	return $result;
 }
 
+function wpmc_check_db_has_featured( $file ) {
+	global $wpdb;
+	$mediaCount = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $wpdb->postmeta AS pm INNER JOIN $wpdb->posts AS p ON pm.meta_value = p.ID WHERE p.guid LIKE %s", '%' . $file . '%' ) );
+	return ( $mediaCount > 0 );
+}
+
+function wpmc_check_db_has_meta( $file ) {
+	global $wpdb;
+	$mediaCount = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $wpdb->postmeta WHERE meta_key != '_wp_attached_file' AND meta_value LIKE %s", '%' . $file . '%' ) );
+	return ( $mediaCount > 0 );
+}
+
+function wpmc_check_db_has_content( $file ) {
+	global $wpdb;
+	$mediaCount = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $wpdb->posts WHERE post_content LIKE %s", '%' . $file . '%' ) );
+	return ( $mediaCount > 0 );
+}
+
+// Return true if the files is referenced, false if it is not.
 function wpmc_check_file( $path ) {
 	global $wpdb;
 	$filepath = wp_upload_dir();
@@ -296,19 +315,18 @@ function wpmc_check_file( $path ) {
 	}
 
 	$path_parts = pathinfo( $path );
-	$mediaCount = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $wpdb->postmeta WHERE meta_key = '_wp_attachment_metadata' AND meta_value LIKE %s", '%' . $path_parts['basename'] . '%' ) );
-	if ( $mediaCount > 0 )
+	if ( wpmc_check_db_has_meta( $path_parts['basename'] ) ||  wpmc_check_db_has_featured( $path_parts['basename'] ) 
+		|| wpmc_check_db_has_content( $path_parts['basename'] ) )
 		return true;
-	$mediaCount = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $wpdb->posts WHERE post_content LIKE %s", '%' . $path . '%' ) );
-	if ( $mediaCount > 0 )
-		return true;
+
 	$table_name = $wpdb->prefix . "wpmcleaner";
+	$filesize = file_exists( $filepath ) ? filesize ($filepath) : 0;
 	$wpdb->insert( $table_name, 
 		array( 
 			'time' => current_time('mysql'),
 			'type' => 0,
 			'path' => $path,
-			'size' => filesize ($filepath),
+			'size' => $filesize,
 			'issue' => 'NO_POST_NO_MEDIA'
 		) 
 	);
@@ -360,8 +378,8 @@ function wpmc_check_media( $attachmentId ) {
 	if ( file_exists( $fullpath ) ) {
 		$size = filesize( $fullpath );
 	}
-	$count = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $wpdb->posts WHERE post_content LIKE %s", '%' . $mainfile . '%' ) );
-	if ( $count > 0 )
+
+	if ( wpmc_check_db_has_content( $mainfile ) || wpmc_check_db_has_featured( $mainfile ) )
 		return true;
 
 	// If images, check the other files as well
@@ -377,9 +395,8 @@ function wpmc_check_media( $attachmentId ) {
 					$size += filesize( $filepath );
 				}
 				$file = wpmc_clean_uploaded_filename( $attr['file'] );
-				$count = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $wpdb->posts WHERE post_content LIKE %s", '%' . $file . '%' ) );
 				$countfiles++;
-				if ( $count > 0 )
+				if ( wpmc_check_db_has_content( $file ) || wpmc_check_db_has_featured( $file ) )
 					return true;
 			}
 		}
@@ -436,7 +453,6 @@ function wpmc_screen() {
 		<h2>WP Media Cleaner</h2>
 
 		<?php
-
 			$scan_files = wpmc_getoption( 'scan_files', 'wpmc_basics' );
 			$scan_media = wpmc_getoption( 'scan_media', 'wpmc_basics' );
 
