@@ -48,7 +48,7 @@ function wpmc_recover_do(items, totalcount) {
 		data = { action: 'wpmc_recover_do', data: newItems };
 	}
 	else {
-		jQuery('#wpmc_progression').html("Done. Please <a href='javascript:history.go(0)'>refresh</a> this page.");
+		jQuery('#wpmc_progression').html("Done. Please <a href='?page=wp-media-cleaner'>refresh</a> this page.");
 		return;
 	}
 	jQuery.post(ajaxurl, data, function (response) {
@@ -101,7 +101,7 @@ function wpmc_delete_do(items, totalcount) {
 		data = { action: 'wpmc_delete_do', data: newItems };
 	}
 	else {
-		jQuery('#wpmc_progression').html("Done. Please <a href='javascript:history.go(0)'>refresh</a> this page.");
+		jQuery('#wpmc_progression').html("Done. Please <a href='?page=wp-media-cleaner'>refresh</a> this page.");
 		return;
 	}
 	jQuery.post(ajaxurl, data, function (response) {
@@ -148,7 +148,7 @@ function wpmc_scan_do(files, medias, totalcount, totalissues) {
 		data = { action: 'wpmc_scan_do', type: 'media', data: newMedias };
 	}
 	else {
-		jQuery('#wpmc_progression').html("Done. " + totalissues + " issue(s) found. Please <a href='javascript:history.go(0)'>refresh</a> this page.");
+		jQuery('#wpmc_progression').html("Done. " + totalissues + " issue(s) found. Please <a href='?page=wp-media-cleaner'>refresh</a> this page.");
 		return;
 	}
 	jQuery.post(ajaxurl, data, function (response) {

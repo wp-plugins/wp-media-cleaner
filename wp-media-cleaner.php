@@ -3,7 +3,7 @@
 Plugin Name: WP Media Cleaner
 Plugin URI: http://www.meow.fr/wp-media-cleaner
 Description: Clean your Media Library and Uploads Folder.
-Version: 1.2.2
+Version: 1.4.0
 Author: Jordy Meow
 Author URI: http://www.meow.fr
 
@@ -26,7 +26,7 @@ add_action( 'wp_ajax_wpmc_delete_do', 'wpmc_wp_ajax_wpmc_delete_do' );
 add_action( 'wp_ajax_wpmc_recover_do', 'wpmc_wp_ajax_wpmc_recover_do' );
 
 register_activation_hook( __FILE__, 'wpmc_activate' );
-register_deactivation_hook( __FILE__, 'wpmc_desactivate' );
+register_uninstall_hook( __FILE__, 'wpmc_uninstall' );
 
 require( 'jordy_meow_footer.php' );
 require( 'wpmc_settings.php' );
@@ -419,10 +419,12 @@ function wpmc_check_media( $attachmentId ) {
 function wpmc_reset_issues( $includingIgnored = false ) {
 	global $wpdb;
 	$table_name = $wpdb->prefix . "wpmcleaner";
-	if ( $includingIgnored )
-		$wpdb->query( "DELETE FROM $table_name" );
-	else
-		$wpdb->query( "DELETE FROM $table_name WHERE ignored = 0" );
+	if ( $includingIgnored ) {
+		$wpdb->query( "DELETE FROM $table_name WHERE deleted = 0" );
+	}
+	else {
+		$wpdb->query( "DELETE FROM $table_name WHERE ignored = 0 AND deleted = 0" );
+	}
 }
 
 /**
@@ -643,7 +645,7 @@ function wpmc_admin_menu() {
 }
 
 function wpmc_reset () {
-	wpmc_desactivate();
+	wpmc_uninstall();
 	wpmc_activate();
 }
 
@@ -673,7 +675,7 @@ function wpmc_activate () {
 
 }
 
-function wpmc_desactivate () {
+function wpmc_uninstall () {
 	global $wpdb;
 	$table_name = $wpdb->prefix . "wpmcleaner"; 
 	$wpdb->query("DROP TABLE IF EXISTS $table_name");

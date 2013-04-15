@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_i
 Tags: management, admin, file, files, images, image, media, libary, upload, clean, cleaning
 Requires at least: 3.5
 Tested up to: 3.5
-Stable tag: 1.2.2
+Stable tag: 1.4.0
 
 Help you cleaning your Uploads Directory and your Media Library.
 
@@ -45,6 +45,12 @@ Please contact me through my website <a href='http://www.totorotimes.com'>Totoro
 1. Media -> Clean
 
 == Changelog ==
+
+= 1.4.0 =
+* Add: check the meta properties.
+* Add: check the 'featured image' properties.
+* Fix: keep the trash information when a new scan is started.
+* Fix: remove the DB on uninstall, not on desactivate.
 
 = 1.2.2 =
 * Add: progress %.

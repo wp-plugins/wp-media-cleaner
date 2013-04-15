@@ -11,6 +11,7 @@ add_action( 'admin_init', 'wpmc_admin_init' );
 function wpmc_settings_page() {
     $settings_api = wpmc_WeDevs_Settings_API::getInstance();
 	echo '<div class="wrap">';
+    jordy_meow_donation();
 	echo "<div id='icon-options-general' class='icon32'><br></div><h2>WP Media Cleaner</h2>";
 
     //settings_errors();
