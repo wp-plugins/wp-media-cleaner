@@ -3,7 +3,7 @@
 Plugin Name: WP Media Cleaner
 Plugin URI: http://www.meow.fr/wp-media-cleaner
 Description: Clean your Media Library and Uploads Folder.
-Version: 1.4.0
+Version: 1.6.0
 Author: Jordy Meow
 Author URI: http://www.meow.fr
 
@@ -463,7 +463,7 @@ function wpmc_screen() {
 				_e( "Scan is not enabled for either the files or the medias. Please check Settings > WP Media Cleaner.", 'wp-media-cleaner' ); 
 			}
 			if ( $scan_media ) {
-				_e( "Be aware that a media will be considered <b>NOT</b> an issue <b>ONLY IF</b> it is found in the Posts or Pages, and not in a Gallery. The deletion of a media is also <b>PERMANENT</b>.", 'wp-media-cleaner' ); 
+				_e( "The deletion of a media is <b>PERMANENT</b>.", 'wp-media-cleaner' ); 
 			}
 			echo "</p>";
 
