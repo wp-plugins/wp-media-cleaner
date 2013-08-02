@@ -3,8 +3,8 @@ Contributors: TigrouMeow
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=JAWE2XWH7ZE5U
 Tags: management, admin, file, files, images, image, media, libary, upload, clean, cleaning
 Requires at least: 3.5
-Tested up to: 3.5
-Stable tag: 1.4.0
+Tested up to: 3.6
+Stable tag: 1.4.2
 
 Help you cleaning your Uploads Directory and your Media Library.
 
@@ -45,6 +45,9 @@ Please contact me through my website <a href='http://www.totorotimes.com'>Totoro
 1. Media -> Clean
 
 == Changelog ==
+
+= 1.4.2 =
+* Change: Readme.txt.
 
 = 1.4.0 =
 * Add: check the meta properties.
