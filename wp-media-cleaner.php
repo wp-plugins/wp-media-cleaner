@@ -1,9 +1,9 @@
 <?php
 /*
 Plugin Name: WP Media Cleaner
-Plugin URI: http://www.meow.fr/wp-media-cleaner
+Plugin URI: http://wordpress.org/plugins/wp-media-cleaner/
 Description: Clean your Media Library and Uploads Folder.
-Version: 1.6.0
+Version: 1.7.0
 Author: Jordy Meow
 Author URI: http://www.meow.fr
 
@@ -193,11 +193,35 @@ function wpmc_recover( $id ) {
 	return true;	
 }
 
+function wpmc_trash_file( $fileIssuePath ) {
+	global $wpdb;
+	$basedir = wp_upload_dir();
+	$originalPath = trailingslashit( $basedir['basedir'] ) . $fileIssuePath;
+	$trashPath = trailingslashit( wpmc_trashdir() ) . $fileIssuePath;
+	$path_parts = pathinfo( $trashPath );
+
+	try {
+		if ( !file_exists( $path_parts['dirname'] ) && !wp_mkdir_p( $path_parts['dirname'] ) ) {
+			return false;
+		}
+		// Rename the file (move). 'is_dir' is just there for security (no way we should move a whole directory)
+		if ( is_dir( $originalPath ) || !rename( $originalPath, $trashPath ) ) {
+			return false;
+		}
+	}
+	catch (Exception $e) {
+		return false;
+	}
+	return true;
+}
+
 function wpmc_delete( $id ) {
 	global $wpdb;
 	$table_name = $wpdb->prefix . "wpmcleaner";
 	$issue = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table_name WHERE id = %d", $id ), OBJECT );
 	$issue->path = stripslashes( $issue->path );
+
+	print_r($issue);
 
 	// Empty trash
 	if ( $issue->deleted == 1 ) {
@@ -211,30 +235,71 @@ function wpmc_delete( $id ) {
 
 	// Remove file
 	if ( $issue->type == 0 ) {
-		$basedir = wp_upload_dir();
-		$originalPath = trailingslashit( $basedir['basedir'] ) . $issue->path;
-		$trashPath = trailingslashit( wpmc_trashdir() ) . $issue->path;
-		$path_parts = pathinfo( $trashPath );
-
-		try {
-			if ( !file_exists( $path_parts['dirname'] ) && !wp_mkdir_p( $path_parts['dirname'] ) ) {
-				return false;
-			}
-			// Rename the file (move). 'is_dir' is just there for security (no way we should move a whole directory)
-			if ( is_dir( $originalPath ) || !rename( $originalPath, $trashPath ) ) {
-				return false;
-			}
-		}
-		catch (Exception $e) {
-			return false;
-		}
-		$wpdb->query( $wpdb->prepare( "UPDATE $table_name SET deleted = 1 WHERE id = %d", $id ) );
+		if ( wpmc_trash_file( $issue->path ) )
+			$wpdb->query( $wpdb->prepare( "UPDATE $table_name SET deleted = 1 WHERE id = %d", $id ) );
 		return true;
 	}
 
 	// Remove DB media
 	if ( $issue->type == 1 ) {
-		// We can use WordPress trash here.
+
+		// There is no trash for WP attachment for now. Let's copy
+		// the images to the trash so that it can be recovered.
+		$fullpath = get_attached_file( $issue->postId );
+		$mainfile = wpmc_clean_uploaded_filename( $fullpath );
+		$baseUp = pathinfo( $mainfile );
+		$baseUp = $baseUp['dirname'];
+		$size = filesize ($fullpath);
+		$file = wpmc_clean_uploaded_filename( $fullpath );
+		if ( wpmc_trash_file( $file ) ) {
+			$table_name = $wpdb->prefix . "wpmcleaner";
+			$wpdb->insert( $table_name, 
+				array( 
+					'time' => current_time('mysql'),
+					'type' => 0,
+					'deleted' => 1,
+					'path' => $file,
+					'size' => $size,
+					'issue' => $issue->issue
+				) 
+			);
+		}
+
+		// If images, check the other files as well
+		$meta = wp_get_attachment_metadata( $issue->postId );
+		$isImage = isset( $meta, $meta['width'], $meta['height'] );
+		$sizes = wpmc_get_image_sizes();
+		if ( $isImage && isset( $meta['sizes'] ) ) {
+			foreach ( $meta['sizes'] as $name => $attr ) {
+				if  ( isset( $attr['file'] ) ) {
+					$filepath = wp_upload_dir();
+					$filepath = $filepath['basedir'];
+					$filepath = trailingslashit( $filepath ) . trailingslashit( $baseUp ) . $attr['file'];
+					$file = wpmc_clean_uploaded_filename( $filepath );
+					$size = filesize ($filepath);
+
+					// For each file of this media successfully trashed, we should
+					// create a new entry in the WP Cleaner database to give the
+					// user the chance to restore it.
+					if ( wpmc_trash_file( $file ) ) {
+						$table_name = $wpdb->prefix . "wpmcleaner";
+						$wpdb->insert( $table_name, 
+							array( 
+								'time' => current_time('mysql'),
+								'type' => 0,
+								'deleted' => 1,
+								'path' => $file,
+								'size' => $size,
+								'issue' => $issue->issue
+							) 
+						);
+					}
+
+				}
+			}
+		}
+
+		// Delete the Media in the WP DB
 		wp_delete_attachment( $issue->postId, false );
 		$wpdb->query( $wpdb->prepare( "DELETE FROM $table_name WHERE id = %d", $id ) );
 		return true;
@@ -314,9 +379,14 @@ function wpmc_check_file( $path ) {
 		}
 	}
 
+	$issue = "NONE";
 	$path_parts = pathinfo( $path );
-	if ( wpmc_check_db_has_meta( $path_parts['basename'] ) ||  wpmc_check_db_has_featured( $path_parts['basename'] ) 
-		|| wpmc_check_db_has_content( $path_parts['basename'] ) )
+	
+	if ( !wpmc_check_db_has_meta( $path_parts['basename'] ) )
+		$issue = "NO_MEDIA";
+	else if ( !wpmc_check_db_has_featured( $path_parts['basename'] ) && wpmc_check_db_has_content( $path_parts['basename'] ) )
+		$issue = "NO_POST";
+	else
 		return true;
 
 	$table_name = $wpdb->prefix . "wpmcleaner";
@@ -327,7 +397,7 @@ function wpmc_check_file( $path ) {
 			'type' => 0,
 			'path' => $path,
 			'size' => $filesize,
-			'issue' => 'NO_POST_NO_MEDIA'
+			'issue' => $issue
 		) 
 	);
 	return false;
@@ -435,13 +505,13 @@ function wpmc_reset_issues( $includingIgnored = false ) {
 
 function echo_issue( $issue ) {
 	if ( $issue == 'NO_POST' ) {
-		_e( "Related content not found.", 'wp-media-cleaner' );
+		_e( "Not used.", 'wp-media-cleaner' );
 	}
-	else if ( $issue == 'NO_POST_NO_MEDIA' ) {
-		_e( "Related content or media not found.", 'wp-media-cleaner' );
+	else if ( $issue == 'NO_MEDIA' ) {
+		_e( "Media (DB entry) not found.", 'wp-media-cleaner' );
 	}
 	else if ( $issue == 'ORPHAN_RETINA' )
-		_e( "Orphan retina file.", 'wp-media-cleaner' );	
+		_e( "Orphan retina.", 'wp-media-cleaner' );	
 	else {
 		echo $issue;
 	}
@@ -459,11 +529,12 @@ function wpmc_screen() {
 			$scan_media = wpmc_getoption( 'scan_media', 'wpmc_basics' );
 
 			echo "<p>";
+			echo "Deleted files will be moved to the 'uploads/wpmc-trash' directory. Please backup your database and files.";
 			if ( !$scan_files && !$scan_media ) {
-				_e( "Scan is not enabled for either the files or the medias. Please check Settings > WP Media Cleaner.", 'wp-media-cleaner' ); 
+				_e( "<br />Scan is not enabled for either the files or the medias. Please check Settings > WP Media Cleaner.", 'wp-media-cleaner' ); 
 			}
 			if ( $scan_media ) {
-				_e( "The deletion of a media is <b>PERMANENT</b>.", 'wp-media-cleaner' ); 
+				_e( "<br />If you delete an item of the type MEDIA, the database entry for it (Media Library) will be <u>deleted permanently</u>.", 'wp-media-cleaner' ); 
 			}
 			echo "</p>";
 
@@ -575,7 +646,7 @@ function wpmc_screen() {
 
 		</div>
 
-		<p>There are <b><?php echo $issues_count ?> problem(s)</b> with your files, accounting for <b><?php echo number_format( $total_size / 1000000, 2 )  ?> MB</b>. Please use these functions very carefully. Deleted files will be moved to the 'uploads/wpmc-trash' directory. Your trash contains <b><?php echo number_format( $trash_total_size / 1000000, 2 )  ?> MB.</b></p>
+		<p>There are <b><?php echo $issues_count ?> issue(s)</b> with your files, accounting for <b><?php echo number_format( $total_size / 1000000, 2 )  ?> MB</b>. Your trash contains <b><?php echo number_format( $trash_total_size / 1000000, 2 )  ?> MB.</b></p>
 
 		<div id='wpmc-pages'>
 		<?php
