@@ -3,7 +3,7 @@
 Plugin Name: WP Media Cleaner
 Plugin URI: http://wordpress.org/plugins/wp-media-cleaner/
 Description: Clean your Media Library and Uploads Folder.
-Version: 1.7.0
+Version: 1.8.0
 Author: Jordy Meow
 Author URI: http://www.meow.fr
 
@@ -334,6 +334,27 @@ function wpmc_list_uploaded_files( $basedir, $dir ) {
 	return $result;
 }
 
+function wpmc_check_db_has_background_or_header( $file ) {
+
+	if ( current_theme_supports( 'custom-header' ) ) {
+		$custom_header = get_custom_header();
+		if ( $custom_header && $custom_header->url ) {
+			if ( strpos( $custom_header->url, $file ) !== false )
+				return true;	
+		}
+	}
+
+	if ( current_theme_supports( 'custom-background' ) ) {
+		$custom_background = get_theme_mod('background_image');
+		if ( $custom_background ) {
+			if ( strpos( $custom_background, $file ) !== false )
+				return true;
+		}
+	}
+
+	return false;
+}
+
 function wpmc_check_db_has_featured( $file ) {
 	global $wpdb;
 	$mediaCount = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $wpdb->postmeta AS pm INNER JOIN $wpdb->posts AS p ON pm.meta_value = p.ID WHERE p.guid LIKE %s", '%' . $file . '%' ) );
@@ -348,7 +369,7 @@ function wpmc_check_db_has_meta( $file ) {
 
 function wpmc_check_db_has_content( $file ) {
 	global $wpdb;
-	$mediaCount = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $wpdb->posts WHERE post_content LIKE %s", '%' . $file . '%' ) );
+	$mediaCount = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $wpdb->posts WHERE post_type <> 'attachment' AND post_content LIKE %s", '%' . $file . '%' ) );
 	return ( $mediaCount > 0 );
 }
 
@@ -382,12 +403,17 @@ function wpmc_check_file( $path ) {
 	$issue = "NONE";
 	$path_parts = pathinfo( $path );
 	
-	if ( !wpmc_check_db_has_meta( $path_parts['basename'] ) )
-		$issue = "NO_MEDIA";
-	else if ( !wpmc_check_db_has_featured( $path_parts['basename'] ) && wpmc_check_db_has_content( $path_parts['basename'] ) )
-		$issue = "NO_POST";
-	else
+	if ( wpmc_check_db_has_featured( $path_parts['basename'] ) 
+		|| wpmc_check_db_has_content( $path_parts['basename'] ) 
+		|| wpmc_check_db_has_background_or_header( $path_parts['basename'] ) )
 		return true;
+	else
+		$issue = "NO_CONTENT";
+
+	if ( wpmc_check_db_has_meta( $path_parts['basename'] ) )
+		return true;
+	else
+		$issue = "NO_MEDIA";
 
 	$table_name = $wpdb->prefix . "wpmcleaner";
 	$filesize = file_exists( $filepath ) ? filesize ($filepath) : 0;
@@ -449,7 +475,9 @@ function wpmc_check_media( $attachmentId ) {
 		$size = filesize( $fullpath );
 	}
 
-	if ( wpmc_check_db_has_content( $mainfile ) || wpmc_check_db_has_featured( $mainfile ) )
+	if ( wpmc_check_db_has_content( $mainfile ) 
+		|| wpmc_check_db_has_featured( $mainfile ) 
+		|| wpmc_check_db_has_background_or_header( $mainfile ) )
 		return true;
 
 	// If images, check the other files as well
@@ -466,7 +494,9 @@ function wpmc_check_media( $attachmentId ) {
 				}
 				$file = wpmc_clean_uploaded_filename( $attr['file'] );
 				$countfiles++;
-				if ( wpmc_check_db_has_content( $file ) || wpmc_check_db_has_featured( $file ) )
+				if ( wpmc_check_db_has_content( $file ) 
+					|| wpmc_check_db_has_featured( $file ) 
+					|| wpmc_check_db_has_background_or_header( $file ) )
 					return true;
 			}
 		}
@@ -479,7 +509,7 @@ function wpmc_check_media( $attachmentId ) {
 			'size' => $size,
 			'path' => $mainfile . ($countfiles > 0 ? (" (+ " . $countfiles . " files)") : ""),
 			'postId' => $attachmentId,
-			'issue' => 'NO_POST'
+			'issue' => 'NO_CONTENT'
 			) 
 		);
 	return false;
@@ -504,7 +534,7 @@ function wpmc_reset_issues( $includingIgnored = false ) {
  */
 
 function echo_issue( $issue ) {
-	if ( $issue == 'NO_POST' ) {
+	if ( $issue == 'NO_CONTENT' ) {
 		_e( "Not used.", 'wp-media-cleaner' );
 	}
 	else if ( $issue == 'NO_MEDIA' ) {
@@ -605,7 +635,7 @@ function wpmc_screen() {
 			}
 		</style>
 
-		<div style='margin-top: 12px; background: #EEE; padding: 5px; border-radius: 4px; height: 24px; box-shadow: 0px 0px 3px #575757;'>
+		<div style='margin-top: 12px; background: #FFF; padding: 5px; border-radius: 4px; height: 28px; box-shadow: 0px 0px 6px #C2C2C2;'>
 			
 			<!-- SCAN -->
 			<?php if ( $view != 'deleted' ) { ?>
