@@ -67,6 +67,16 @@ function wpmc_recover_do(items, totalcount) {
  *
  */
 
+function wpmc_ignore() {
+	var items = [];
+	jQuery('#wpmc-table input:checked').each(function (index) {
+		if (jQuery(this)[0].value != 'on') {
+			items.push(jQuery(this)[0].value);
+		}
+	});
+	wpmc_ignore_do(items, items.length);
+}
+
 function wpmc_delete() {
 	var items = [];
 	jQuery('#wpmc-table input:checked').each(function (index) {
@@ -111,6 +121,26 @@ function wpmc_delete_do(items, totalcount) {
 			return;
 		}
 		wpmc_delete_do(items, totalcount);
+	});
+}
+
+function wpmc_ignore_do(items, totalcount) {
+	wpmc_update_progress(totalcount - items.length, totalcount);
+	if (items.length > 0) {
+		newItems = wpmc_pop_array(items, 5);
+		data = { action: 'wpmc_ignore_do', data: newItems };
+	}
+	else {
+		jQuery('#wpmc_progression').html("Done. Please <a href='?page=wp-media-cleaner'>refresh</a> this page.");
+		return;
+	}
+	jQuery.post(ajaxurl, data, function (response) {
+		reply = jQuery.parseJSON(response);
+		if ( !reply.success ) {
+			alert( reply.message );
+			return;
+		}
+		wpmc_ignore_do(items, totalcount);
 	});
 }
 

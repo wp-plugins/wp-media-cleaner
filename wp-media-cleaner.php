@@ -3,7 +3,7 @@
 Plugin Name: WP Media Cleaner
 Plugin URI: http://wordpress.org/plugins/wp-media-cleaner/
 Description: Clean your Media Library and Uploads Folder.
-Version: 1.8.0
+Version: 1.9.0
 Author: Jordy Meow
 Author URI: http://www.meow.fr
 
@@ -23,6 +23,7 @@ add_action( 'wp_ajax_wpmc_get_all_issues', 'wpmc_wp_ajax_wpmc_get_all_issues' );
 add_action( 'wp_ajax_wpmc_get_all_deleted', 'wpmc_wp_ajax_wpmc_get_all_deleted' );
 add_action( 'wp_ajax_wpmc_scan_do', 'wpmc_wp_ajax_wpmc_scan_do' );
 add_action( 'wp_ajax_wpmc_delete_do', 'wpmc_wp_ajax_wpmc_delete_do' );
+add_action( 'wp_ajax_wpmc_ignore_do', 'wpmc_wp_ajax_wpmc_ignore_do' );
 add_action( 'wp_ajax_wpmc_recover_do', 'wpmc_wp_ajax_wpmc_recover_do' );
 
 register_activation_hook( __FILE__, 'wpmc_activate' );
@@ -43,6 +44,24 @@ function wpmc_wp_ajax_wpmc_delete_do () {
 	$success = 0;
 	foreach ( $data as $piece ) {
 		$success += ( wpmc_delete( $piece ) ? 1 : 0 );
+	}
+	ob_end_clean();
+	echo json_encode( 
+		array(
+			'success' => true,
+			'result' => array( 'data' => $data, 'success' => $success ),
+			'message' => __( "Status unknown.", 'wp-media-cleaner' )
+		)
+	);
+	die();
+}
+
+function wpmc_wp_ajax_wpmc_ignore_do () {
+	ob_start();
+	$data = $_POST['data'];
+	$success = 0;
+	foreach ( $data as $piece ) {
+		$success += ( wpmc_ignore( $piece ) ? 1 : 0 );
 	}
 	ob_end_clean();
 	echo json_encode( 
@@ -215,13 +234,18 @@ function wpmc_trash_file( $fileIssuePath ) {
 	return true;
 }
 
+function wpmc_ignore( $id ) {
+	global $wpdb;
+	$table_name = $wpdb->prefix . "wpmcleaner";
+	$wpdb->query( $wpdb->prepare( "UPDATE $table_name SET ignored = 1 WHERE id = %d", $id ) );
+	return true;
+}
+
 function wpmc_delete( $id ) {
 	global $wpdb;
 	$table_name = $wpdb->prefix . "wpmcleaner";
 	$issue = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table_name WHERE id = %d", $id ), OBJECT );
 	$issue->path = stripslashes( $issue->path );
-
-	print_r($issue);
 
 	// Empty trash
 	if ( $issue->deleted == 1 ) {
@@ -552,23 +576,7 @@ function wpmc_screen() {
 	<div class='wrap'>
 		<?php jordy_meow_donation(); ?>
 		<div id="icon-upload" class="icon32"><br></div>
-		<h2>WP Media Cleaner</h2>
-
-		<?php
-			$scan_files = wpmc_getoption( 'scan_files', 'wpmc_basics' );
-			$scan_media = wpmc_getoption( 'scan_media', 'wpmc_basics' );
-
-			echo "<p>";
-			echo "Deleted files will be moved to the 'uploads/wpmc-trash' directory. Please backup your database and files.";
-			if ( !$scan_files && !$scan_media ) {
-				_e( "<br />Scan is not enabled for either the files or the medias. Please check Settings > WP Media Cleaner.", 'wp-media-cleaner' ); 
-			}
-			if ( $scan_media ) {
-				_e( "<br />If you delete an item of the type MEDIA, the database entry for it (Media Library) will be <u>deleted permanently</u>.", 'wp-media-cleaner' ); 
-			}
-			echo "</p>";
-
-		?>
+		<h2>WP Media Cleaner <?php by_jordy_meow(); ?></h2>
 
 		<?php 
 			global $wpdb;
@@ -634,8 +642,8 @@ function wpmc_screen() {
 				font-weight: bold;
 			}
 		</style>
-
-		<div style='margin-top: 12px; background: #FFF; padding: 5px; border-radius: 4px; height: 28px; box-shadow: 0px 0px 6px #C2C2C2;'>
+		
+		<div style='margin-top: 0px; background: #FFF; padding: 5px; border-radius: 4px; height: 28px; box-shadow: 0px 0px 6px #C2C2C2;'>
 			
 			<!-- SCAN -->
 			<?php if ( $view != 'deleted' ) { ?>
@@ -647,6 +655,9 @@ function wpmc_screen() {
 			<?php if ( $view == 'deleted' ) { ?>
 				<a id='wpmc_recover' onclick='wpmc_recover()' class='button-secondary' style='float: left; margin-left: 5px;'><img style='position: relative; top: 3px; left: -2px; margin-right: 3px; width: 16px; height: 16px;' src='<?php echo trailingslashit( WP_PLUGIN_URL ) . trailingslashit( 'wp-media-cleaner/img'); ?>pills.png' /><?php _e("Recover", 'wp-media-cleaner'); ?></a>
 			<?php } ?>
+
+			<!-- IGNORE SELECTED -->		
+			<a id='wpmc_ignore' onclick='wpmc_ignore()' class='button' style='float: left; margin-left: 5px;'><img style='position: relative; top: 3px; left: -2px; margin-right: 3px; width: 16px; height: 16px;' src='<?php echo trailingslashit( WP_PLUGIN_URL ) . trailingslashit( 'wp-media-cleaner/img'); ?>tick.png' /><?php _e("Ignore", 'wp-media-cleaner'); ?></a>
 
 			<!-- RESET -->
 			<?php if ( $view != 'deleted' ) { ?>
@@ -663,7 +674,7 @@ function wpmc_screen() {
 
 			<form id="posts-filter" action="upload.php" method="get" style='float: right;'>
 				<p class="search-box" style='margin-left: 5px; float: left;'>
-					<input type="search" name="s" value="<?php echo $s ? $s : ""; ?>">
+					<input type="search" name="s" style="width: 120px;" value="<?php echo $s ? $s : ""; ?>">
 					<input type="hidden" name="page" value="wp-media-cleaner">
 					<input type="hidden" name="view" value="<?php echo $view; ?>">
 					<input type="hidden" name="paged" value="<?php echo $paged; ?>">
@@ -676,7 +687,22 @@ function wpmc_screen() {
 
 		</div>
 
-		<p>There are <b><?php echo $issues_count ?> issue(s)</b> with your files, accounting for <b><?php echo number_format( $total_size / 1000000, 2 )  ?> MB</b>. Your trash contains <b><?php echo number_format( $trash_total_size / 1000000, 2 )  ?> MB.</b></p>
+		<p>
+			<?php
+				$scan_files = wpmc_getoption( 'scan_files', 'wpmc_basics' );
+				$scan_media = wpmc_getoption( 'scan_media', 'wpmc_basics' );
+
+				echo "<p>";
+				echo "Deleted files will be moved to the 'uploads/wpmc-trash' directory. Please backup your database and files.";
+				if ( !$scan_files && !$scan_media ) {
+					_e( " Scan is not enabled for either the files or the medias. Please check Settings > WP Media Cleaner.", 'wp-media-cleaner' ); 
+				}
+				if ( $scan_media ) {
+					_e( " If you delete an item of the type MEDIA, the database entry for it (Media Library) will be deleted permanently.", 'wp-media-cleaner' ); 
+				}
+			?>
+			There are <b><?php echo $issues_count ?> issue(s)</b> with your files, accounting for <b><?php echo number_format( $total_size / 1000000, 2 )  ?> MB</b>. Your trash contains <b><?php echo number_format( $trash_total_size / 1000000, 2 )  ?> MB.</b>
+		</p>
 
 		<div id='wpmc-pages'>
 		<?php
@@ -692,7 +718,7 @@ function wpmc_screen() {
 
 		<ul class="subsubsub">
 			<li class="all"><a <?php if ( $view == 'issues' ) echo "class='current'"; ?> href='?page=wp-media-cleaner&s=<?php echo $s; ?>&view=issues'><?php _e( "Issues", 'wp-media-cleaner' ); ?></a><span class="count">(<?php echo $issues_count; ?>)</span></li> |
-			<!--li class="all"><a <?php if ( $view == 'ignored' ) echo "class='current'"; ?> href='?page=wp-media-cleaner&s=<?php echo $s; ?>&view=ignored'><?php _e( "Ignored", 'wp-media-cleaner' ); ?></a><span class="count">(<?php echo $ignored_count; ?>)</span></li-->
+			<li class="all"><a <?php if ( $view == 'ignored' ) echo "class='current'"; ?> href='?page=wp-media-cleaner&s=<?php echo $s; ?>&view=ignored'><?php _e( "Ignored", 'wp-media-cleaner' ); ?></a><span class="count">(<?php echo $ignored_count; ?>)</span></li>
 			<li class="all"><a <?php if ( $view == 'deleted' ) echo "class='current'"; ?> href='?page=wp-media-cleaner&s=<?php echo $s; ?>&view=deleted'><?php _e( "Trash", 'wp-media-cleaner' ); ?></a><span class="count">(<?php echo $deleted_count; ?>)</span></li>
 		</ul>
 
@@ -701,6 +727,7 @@ function wpmc_screen() {
 			<thead>
 				<tr>
 					<th scope="col" id="cb" class="manage-column column-cb check-column"><input id="wpmc-cb-select-all" type="checkbox"></th>
+					<th style='width: 64px;'>Thumb</th>
 					<th style='width: 50px;'>Type</th>
 					<th style='width: 80px;'>Origin</th>
 					<th>Path</th>
@@ -713,6 +740,20 @@ function wpmc_screen() {
 				<?php foreach ( $items as $issue ) { ?>
 				<tr>
 					<td><input type="checkbox" name="id" value="<?php echo $issue->id ?>"></td>
+					<td>
+						<?php 
+							if ( $issue->type == 0 ) {
+								// FILE
+								$upload_dir = wp_upload_dir();
+								echo "<img style='max-width: 48px; max-height: 48px;' src='" . $upload_dir['baseurl'] . '/' . $issue->path . "' />";
+							}
+							else {
+								// MEDIA
+								$attachmentsrc = wp_get_attachment_image_src( $issue->postId, 'thumbnail' );
+								echo "<img style='max-width: 48px; max-height: 48px;' src='" . $attachmentsrc[0] . "' />";
+							}
+						?>
+					</td>
 					<td><?php echo $issue->type == 0 ? 'FILE' : 'MEDIA'; ?></td>
 					<td><?php echo $issue->type == 0 ? 'Filesystem' : ("<a href='media.php?attachment_id=" . $issue->postId . "&action=edit'>ID " . $issue->postId . "</a>"); ?></td>
 					<td><?php echo stripslashes( $issue->path ); ?></td>
@@ -723,7 +764,7 @@ function wpmc_screen() {
 			</tbody>
 
 			<tfoot>
-				<tr><th></th><th>Type</th><th>Origin</th><th>Path</th><th>Issue</th><th style='width: 80px; text-align: right;'>Size</th></tr>
+				<tr><th></th><th></th><th>Type</th><th>Origin</th><th>Path</th><th>Issue</th><th style='width: 80px; text-align: right;'>Size</th></tr>
 			</tfoot>
 
 		</table>
@@ -741,7 +782,7 @@ function wpmc_screen() {
 
 function wpmc_admin_menu() {
 	load_plugin_textdomain( 'wp-media-cleaner', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
-	add_media_page( 'WP Media Cleaner', 'Clean', 'manage_options', 'wp-media-cleaner', 'wpmc_screen' );
+	add_media_page( 'WP Media Cleaner', 'Media Cleaner', 'manage_options', 'wp-media-cleaner', 'wpmc_screen' );
 	add_options_page( 'WP Media Cleaner', 'WP Media Cleaner', 'manage_options', 'wpmc_settings', 'wpmc_settings_page' );
 }
 
