@@ -3,7 +3,7 @@
 Plugin Name: WP Media Cleaner
 Plugin URI: http://wordpress.org/plugins/wp-media-cleaner/
 Description: Clean your Media Library and Uploads Folder.
-Version: 1.9.0
+Version: 1.9.2
 Author: Jordy Meow
 Author URI: http://www.meow.fr
 
@@ -358,6 +358,13 @@ function wpmc_list_uploaded_files( $basedir, $dir ) {
 	return $result;
 }
 
+function wpmc_check_is_ignore( $file ) {
+	global $wpdb;
+	$table_name = $wpdb->prefix . "wpmcleaner";
+	$count = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $table_name WHERE path LIKE '%%%s%%' AND ignored = 1", $file ) );
+	return ($count > 0);
+}
+
 function wpmc_check_db_has_background_or_header( $file ) {
 
 	if ( current_theme_supports( 'custom-header' ) ) {
@@ -427,7 +434,8 @@ function wpmc_check_file( $path ) {
 	$issue = "NONE";
 	$path_parts = pathinfo( $path );
 	
-	if ( wpmc_check_db_has_featured( $path_parts['basename'] ) 
+	if ( wpmc_check_is_ignore( $path_parts['basename'] )
+		|| wpmc_check_db_has_featured( $path_parts['basename'] ) 
 		|| wpmc_check_db_has_content( $path_parts['basename'] ) 
 		|| wpmc_check_db_has_background_or_header( $path_parts['basename'] ) )
 		return true;
@@ -499,7 +507,8 @@ function wpmc_check_media( $attachmentId ) {
 		$size = filesize( $fullpath );
 	}
 
-	if ( wpmc_check_db_has_content( $mainfile ) 
+	if ( wpmc_check_is_ignore( $mainfile )
+		|| wpmc_check_db_has_content( $mainfile ) 
 		|| wpmc_check_db_has_featured( $mainfile ) 
 		|| wpmc_check_db_has_background_or_header( $mainfile ) )
 		return true;

@@ -4,15 +4,15 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_i
 Tags: management, admin, file, files, images, image, media, libary, upload, clean, cleaning
 Requires at least: 3.5
 Tested up to: 3.8
-Stable tag: 1.9.0
+Stable tag: 1.9.2
 
 Help you cleaning your Uploads Directory and your Media Library.
 
 == Description ==
 
-Help you cleaning your Uploads Directory and your Media Library. It detects files which are in your uploads directory but not referenced anywhere in your WordPress install (posts, pages, media...) + detects the media which are not used anywhere. The deleted files will be moved to a trash directory and can be restored directly through the WP Media Cleaner dashboard.
+Help you cleaning your Uploads Directory and your Media Library. It detects files which are in your uploads directory but not referenced anywhere in your WordPress install (posts, pages, media...) or/and detects the media which are not used anywhere. Please note that a media attached to a post but not used directly in the content of the post will be considered as not in use. You can use the 'ignore' function if you want to keep those files. The deleted files will be moved to a trash directory and can be restored directly through the WP Media Cleaner dashboard.
 
-It has been tested on big websites and handles the retina files as well (and therefore such plugin as WP Retina 2x).
+The plugin handles the retina files (@2x) correctly.
 
 Languages: English, French.
 
@@ -45,6 +45,9 @@ Please contact me through my website <a href='http://www.totorotimes.com'>Totoro
 1. Media -> Clean
 
 == Changelog ==
+
+= 1.9.2 =
+* Fix: IGNORE function was... ignored by the scanning process.
 
 = 1.9.0 =
 * Add: thumbnails.
