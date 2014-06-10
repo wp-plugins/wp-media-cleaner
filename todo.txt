@@ -1,6 +1,3 @@
-TODO
-WP MEDIA CLEANER 
+TODO WP MEDIA CLEANER 
 
-Support WP galleries.
-http://wordpress.org/support/topic/images-in-wp-galleries-not-detected-as-in-use?replies=1
-
+...

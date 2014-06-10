@@ -3,7 +3,7 @@
 Plugin Name: WP Media Cleaner
 Plugin URI: http://wordpress.org/plugins/wp-media-cleaner/
 Description: Clean your Media Library and Uploads Folder.
-Version: 1.9.2
+Version: 2.0.0
 Author: Jordy Meow
 Author URI: http://www.meow.fr
 
@@ -146,11 +146,38 @@ function wpmc_wp_ajax_wpmc_get_all_issues () {
 	die;
 }
 
+function wpmc_get_galleries_images( $force = false ) {
+	if ( $force ) {
+		delete_transient( "galleries_images" );
+	}
+	else {
+		$galleries_images = get_transient("galleries_images");
+	}
+	if ( !$galleries_images ) {
+		global $wpdb;
+		$galleries_images = array();
+		$posts = $wpdb->get_col( "SELECT id FROM $wpdb->posts WHERE post_type != 'attachment' AND post_status != 'inherit'" );
+		foreach( $posts as $post ) {
+			$galleries = get_post_galleries_images( $post );
+			foreach( $galleries as $gallery ) {
+				foreach( $gallery as $image ) {
+					array_push($galleries_images, $image);
+				}
+			}
+		}
+		set_transient( "galleries_images", $galleries_images, 60 * 60 * 12 );
+	}
+	return $galleries_images;
+}
+
 function wpmc_wp_ajax_wpmc_scan () {
 	global $wpdb;
-	$library = $_POST['library'];
-	$upload = $_POST['upload'];
+	$library = $_POST[ 'library' ];
+	$upload = $_POST[ 'upload' ];
 	$upload_folder = wp_upload_dir();
+
+	// Reset and prepare all the Attachment IDs of all the galleries 
+	wpmc_get_galleries_images( true );
 
 	if ( wpmc_getoption( 'scan_files', 'wpmc_basics' ) )
 		$files = wpmc_list_uploaded_files( $upload_folder['basedir'], $upload_folder['basedir'] );
@@ -241,6 +268,19 @@ function wpmc_ignore( $id ) {
 	return true;
 }
 
+function wpmc_clean_dir( $dir ) {
+	/*
+	// Maybe we should check if the directory is empty after the deletion and remove it?
+	// Anyway, that code is not working ;)
+	if ( realpath( wpmc_trashdir() ) !== realpath( dirname( $trashPath ) ) ) {
+		$fi = new FilesystemIterator( dirname( $trashPath ), FilesystemIterator::SKIP_DOTS );
+		if ( iterator_count($fi) == 0 ) {
+			unlink( dirname( $trashPath ) );
+		}
+	}
+	*/
+}
+
 function wpmc_delete( $id ) {
 	global $wpdb;
 	$table_name = $wpdb->prefix . "wpmcleaner";
@@ -250,10 +290,10 @@ function wpmc_delete( $id ) {
 	// Empty trash
 	if ( $issue->deleted == 1 ) {
 		$trashPath = trailingslashit( wpmc_trashdir() ) . $issue->path;
-		if ( !unlink( $trashPath ) ) {
+		if ( !unlink( $trashPath ) )
 			die('Failed to delete the file.');
-		}
 		$wpdb->query( $wpdb->prepare( "DELETE FROM $table_name WHERE id = %d", $id ) );
+		wpmc_clean_dir( $trashPath );
 		return true;
 	}
 
@@ -261,6 +301,7 @@ function wpmc_delete( $id ) {
 	if ( $issue->type == 0 ) {
 		if ( wpmc_trash_file( $issue->path ) )
 			$wpdb->query( $wpdb->prepare( "UPDATE $table_name SET deleted = 1 WHERE id = %d", $id ) );
+		wpmc_clean_dir( $trashPath );
 		return true;
 	}
 
@@ -386,6 +427,15 @@ function wpmc_check_db_has_background_or_header( $file ) {
 	return false;
 }
 
+function wpmc_check_in_gallery( $file ) {
+	$images = wpmc_get_galleries_images();
+	foreach ( $images as $image ) {
+		if ( strpos( $image, $file ) !== false) 
+			return true;
+	}
+	return false;
+}
+
 function wpmc_check_db_has_featured( $file ) {
 	global $wpdb;
 	$mediaCount = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $wpdb->postmeta AS pm INNER JOIN $wpdb->posts AS p ON pm.meta_value = p.ID WHERE p.guid LIKE %s", '%' . $file . '%' ) );
@@ -435,6 +485,7 @@ function wpmc_check_file( $path ) {
 	$path_parts = pathinfo( $path );
 	
 	if ( wpmc_check_is_ignore( $path_parts['basename'] )
+		|| wpmc_check_in_gallery( $path_parts['basename'] )
 		|| wpmc_check_db_has_featured( $path_parts['basename'] ) 
 		|| wpmc_check_db_has_content( $path_parts['basename'] ) 
 		|| wpmc_check_db_has_background_or_header( $path_parts['basename'] ) )
@@ -508,6 +559,7 @@ function wpmc_check_media( $attachmentId ) {
 	}
 
 	if ( wpmc_check_is_ignore( $mainfile )
+		|| wpmc_check_in_gallery( $mainfile )
 		|| wpmc_check_db_has_content( $mainfile ) 
 		|| wpmc_check_db_has_featured( $mainfile ) 
 		|| wpmc_check_db_has_background_or_header( $mainfile ) )
@@ -528,6 +580,7 @@ function wpmc_check_media( $attachmentId ) {
 				$file = wpmc_clean_uploaded_filename( $attr['file'] );
 				$countfiles++;
 				if ( wpmc_check_db_has_content( $file ) 
+					|| wpmc_check_in_gallery( $file )
 					|| wpmc_check_db_has_featured( $file ) 
 					|| wpmc_check_db_has_background_or_header( $file ) )
 					return true;
@@ -636,7 +689,6 @@ function wpmc_screen() {
 				top: 12px;
 			}
 
-
 			#wpmc-pages a {
 				text-decoration: none;
 				border: 1px solid black;
@@ -704,7 +756,9 @@ function wpmc_screen() {
 				echo "<p>";
 				echo "Deleted files will be moved to the 'uploads/wpmc-trash' directory. Please backup your database and files.";
 				if ( !$scan_files && !$scan_media ) {
+					echo "<span style='color: red;'>";
 					_e( " Scan is not enabled for either the files or the medias. Please check Settings > WP Media Cleaner.", 'wp-media-cleaner' ); 
+					echo "</span>";
 				}
 				if ( $scan_media ) {
 					_e( " If you delete an item of the type MEDIA, the database entry for it (Media Library) will be deleted permanently.", 'wp-media-cleaner' ); 
@@ -727,7 +781,7 @@ function wpmc_screen() {
 
 		<ul class="subsubsub">
 			<li class="all"><a <?php if ( $view == 'issues' ) echo "class='current'"; ?> href='?page=wp-media-cleaner&s=<?php echo $s; ?>&view=issues'><?php _e( "Issues", 'wp-media-cleaner' ); ?></a><span class="count">(<?php echo $issues_count; ?>)</span></li> |
-			<li class="all"><a <?php if ( $view == 'ignored' ) echo "class='current'"; ?> href='?page=wp-media-cleaner&s=<?php echo $s; ?>&view=ignored'><?php _e( "Ignored", 'wp-media-cleaner' ); ?></a><span class="count">(<?php echo $ignored_count; ?>)</span></li>
+			<li class="all"><a <?php if ( $view == 'ignored' ) echo "class='current'"; ?> href='?page=wp-media-cleaner&s=<?php echo $s; ?>&view=ignored'><?php _e( "Ignored", 'wp-media-cleaner' ); ?></a><span class="count">(<?php echo $ignored_count; ?>)</span></li> |
 			<li class="all"><a <?php if ( $view == 'deleted' ) echo "class='current'"; ?> href='?page=wp-media-cleaner&s=<?php echo $s; ?>&view=deleted'><?php _e( "Trash", 'wp-media-cleaner' ); ?></a><span class="count">(<?php echo $deleted_count; ?>)</span></li>
 		</ul>
 
@@ -750,16 +804,18 @@ function wpmc_screen() {
 				<tr>
 					<td><input type="checkbox" name="id" value="<?php echo $issue->id ?>"></td>
 					<td>
-						<?php 
-							if ( $issue->type == 0 ) {
-								// FILE
-								$upload_dir = wp_upload_dir();
-								echo "<img style='max-width: 48px; max-height: 48px;' src='" . $upload_dir['baseurl'] . '/' . $issue->path . "' />";
-							}
-							else {
-								// MEDIA
-								$attachmentsrc = wp_get_attachment_image_src( $issue->postId, 'thumbnail' );
-								echo "<img style='max-width: 48px; max-height: 48px;' src='" . $attachmentsrc[0] . "' />";
+						<?php
+							if ( $issue->deleted == 0 ) {
+								if ( $issue->type == 0 ) {
+									// FILE
+									$upload_dir = wp_upload_dir();
+									echo "<img style='max-width: 48px; max-height: 48px;' src='" . $upload_dir['baseurl'] . '/' . $issue->path . "' />";			
+								}
+								else {
+									// MEDIA
+									$attachmentsrc = wp_get_attachment_image_src( $issue->postId, 'thumbnail' );
+									echo "<img style='max-width: 48px; max-height: 48px;' src='" . $attachmentsrc[0] . "' />";
+								}
 							}
 						?>
 					</td>
@@ -767,7 +823,7 @@ function wpmc_screen() {
 					<td><?php echo $issue->type == 0 ? 'Filesystem' : ("<a href='media.php?attachment_id=" . $issue->postId . "&action=edit'>ID " . $issue->postId . "</a>"); ?></td>
 					<td><?php echo stripslashes( $issue->path ); ?></td>
 					<td><?php echo_issue( $issue->issue ); ?></td>
-					<td style='text-align: right;'><?php echo number_format( $issue->size / 1000, 2 ); ?> KO</td>
+					<td style='text-align: right;'><?php echo number_format( $issue->size / 1000, 2 ); ?> KB</td>
 				</tr>
 				<?php } ?>
 			</tbody>
@@ -810,8 +866,8 @@ function wpmc_activate () {
 		postId BIGINT(20) NULL,
 		path TINYTEXT NULL,
 		size INT(9) NULL,
-		ignored BIT NOT NULL,
-		deleted BIT NOT NULL,
+		ignored BIT NOT NULL DEFAULT 0,
+		deleted BIT NOT NULL DEFAULT 0,
 		issue TINYTEXT NOT NULL,
 		UNIQUE KEY id (id)
 	);";

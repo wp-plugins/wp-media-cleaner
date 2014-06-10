@@ -3,16 +3,26 @@ Contributors: TigrouMeow
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=JAWE2XWH7ZE5U
 Tags: management, admin, file, files, images, image, media, libary, upload, clean, cleaning
 Requires at least: 3.5
-Tested up to: 3.8
-Stable tag: 1.9.2
+Tested up to: 3.9.1
+Stable tag: 2.0.0
 
 Help you cleaning your Uploads Directory and your Media Library.
 
 == Description ==
 
-Help you cleaning your Uploads Directory and your Media Library. It detects files which are in your uploads directory but not referenced anywhere in your WordPress install (posts, pages, media...) or/and detects the media which are not used anywhere. Please note that a media attached to a post but not used directly in the content of the post will be considered as not in use. You can use the 'ignore' function if you want to keep those files. The deleted files will be moved to a trash directory and can be restored directly through the WP Media Cleaner dashboard.
+Help you cleaning your Uploads Directory and your Media Library. It checks if:
 
-The plugin handles the retina files (@2x) correctly.
+- the physical file is linked to a media
+- the media is used in a post
+- the media is used in a post meta
+- the media is present in a WP gallery
+- a retina image is orphan
+
+If not, it will be added to a specific dashboard and you can trash them from there. After more testing, you can trash them definitely. You can also choose to "ignore" specific files.
+
+This plugin deletes files so be careful to backup your files and databases before using it, especially the first time. 
+
+It has been tested with WP Retina 2x and WPML.
 
 Languages: English, French.
 
@@ -45,6 +55,13 @@ Please contact me through my website <a href='http://www.totorotimes.com'>Totoro
 1. Media -> Clean
 
 == Changelog ==
+
+= 2.0.0 =
+* Gallery support.
+
+= 1.9.4 =
+* I did something but not sure what.
+* Ah yeah, I got married :)
 
 = 1.9.2 =
 * Fix: IGNORE function was... ignored by the scanning process.
