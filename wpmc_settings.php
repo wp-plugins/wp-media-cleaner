@@ -23,8 +23,15 @@ function wpmc_settings_page() {
 
 function wpmc_getoption( $option, $section, $default = '' ) {
 	$options = get_option( $section );
-	if ( isset( $options[$option] ) )
+	if ( isset( $options[$option] ) ) {
+        if ( $options[$option] == "off" ) {
+            return false;
+        }
+        if ( $options[$option] == "on" ) {
+            return true;
+        }
 		return $options[$option];
+    }
 	return $default;
 }
 

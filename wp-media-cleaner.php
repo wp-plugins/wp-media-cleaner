@@ -301,7 +301,7 @@ function wpmc_delete( $id ) {
 	if ( $issue->type == 0 ) {
 		if ( wpmc_trash_file( $issue->path ) )
 			$wpdb->query( $wpdb->prepare( "UPDATE $table_name SET deleted = 1 WHERE id = %d", $id ) );
-		wpmc_clean_dir( $trashPath );
+		wpmc_clean_dir( $issue->path );
 		return true;
 	}
 
