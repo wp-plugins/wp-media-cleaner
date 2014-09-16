@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: WP Media Cleaner
-Plugin URI: http://wordpress.org/plugins/wp-media-cleaner/
+Plugin URI: http://www.meow.fr
 Description: Clean your Media Library and Uploads Folder.
 Version: 2.0.0
 Author: Jordy Meow
