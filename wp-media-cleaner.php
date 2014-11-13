@@ -149,6 +149,7 @@ function wpmc_wp_ajax_wpmc_get_all_issues () {
 function wpmc_get_galleries_images( $force = false ) {
 	if ( $force ) {
 		delete_transient( "galleries_images" );
+		$galleries_images = null;
 	}
 	else {
 		$galleries_images = get_transient("galleries_images");
@@ -866,8 +867,8 @@ function wpmc_activate () {
 		postId BIGINT(20) NULL,
 		path TINYTEXT NULL,
 		size INT(9) NULL,
-		ignored BIT NOT NULL DEFAULT 0,
-		deleted BIT NOT NULL DEFAULT 0,
+		ignored TINYINT(1) NOT NULL DEFAULT 0,
+		deleted TINYINT(1) NOT NULL DEFAULT 0,
 		issue TINYTEXT NOT NULL,
 		UNIQUE KEY id (id)
 	);";
