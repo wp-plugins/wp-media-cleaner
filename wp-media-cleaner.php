@@ -3,7 +3,7 @@
 Plugin Name: WP Media Cleaner
 Plugin URI: http://www.meow.fr
 Description: Clean your Media Library and Uploads Folder.
-Version: 2.2.2
+Version: 2.2.4
 Author: Jordy Meow
 Author URI: http://www.meow.fr
 
@@ -180,12 +180,12 @@ function wpmc_wp_ajax_wpmc_scan () {
 	// Reset and prepare all the Attachment IDs of all the galleries 
 	wpmc_get_galleries_images( true );
 
-	if ( wpmc_getoption( 'scan_files', 'wpmc_basics' ) )
+	if ( wpmc_getoption( 'scan_files', 'wpmc_basics', true ) )
 		$files = wpmc_list_uploaded_files( $upload_folder['basedir'], $upload_folder['basedir'] );
 	else
 		$files = array();
 
-	if ( wpmc_getoption( 'scan_media', 'wpmc_basics' ) )
+	if ( wpmc_getoption( 'scan_media', 'wpmc_basics', true ) )
 		$medias = $wpdb->get_col( "SELECT p.ID FROM $wpdb->posts p WHERE post_status = 'inherit' AND post_type = 'attachment'" );
 	else
 		$medias = array();
@@ -751,8 +751,8 @@ function wpmc_screen() {
 
 		<p>
 			<?php
-				$scan_files = wpmc_getoption( 'scan_files', 'wpmc_basics' );
-				$scan_media = wpmc_getoption( 'scan_media', 'wpmc_basics' );
+				$scan_files = wpmc_getoption( 'scan_files', 'wpmc_basics', true );
+				$scan_media = wpmc_getoption( 'scan_media', 'wpmc_basics', true );
 
 				echo "<p>";
 				echo "Deleted files will be moved to the 'uploads/wpmc-trash' directory. Please backup your database and files.";

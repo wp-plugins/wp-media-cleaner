@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_i
 Tags: management, admin, file, files, images, image, media, libary, upload, clean, cleaning
 Requires at least: 3.5
 Tested up to: 4.0
-Stable tag: 2.2.2
+Stable tag: 2.2.4
 
 Help you cleaning your Uploads Directory and your Media Library.
 
@@ -56,6 +56,9 @@ Please contact me through my website <a href='http://www.totorotimes.com'>Totoro
 1. Media -> Media Cleaner
 
 == Changelog ==
+
+= 2.2.4 =
+* Change: options are now all enabled by default.
 
 = 2.2.0 =
 * Fix: DB issue avoided trashed files from being deleted permanently.

@@ -53,14 +53,14 @@ function wpmc_admin_init() {
                 'label' => __( 'Scan Media', 'wp-media-cleaner' ),
                 'desc' => __( 'The Media Library will be scanned.', 'wp-media-cleaner' ),
                 'type' => 'checkbox',
-                'default' => false
+                'default' => true
             ),
             array(
                 'name' => 'scan_files',
                 'label' => __( 'Scan Files', 'wp-media-cleaner' ),
                 'desc' => __( 'The Uploads folder will be scanned.', 'wp-media-cleaner' ),
                 'type' => 'checkbox',
-                'default' => false
+                'default' => true
             )
         )
     );
