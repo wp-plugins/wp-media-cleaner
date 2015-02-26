@@ -3,12 +3,14 @@ Contributors: TigrouMeow
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=H2S7S3G4XMJ6J
 Tags: management, admin, file, files, images, image, media, libary, upload, clean, cleaning
 Requires at least: 3.5
-Tested up to: 4.0
-Stable tag: 2.2.4
+Tested up to: 4.1.1
+Stable tag: 2.2.6
 
 Help you cleaning your Uploads Directory and your Media Library.
 
 == Description ==
+
+First, backup your all your files. You cannot trust any plugin or any tool to do this automatically. If you don't know what you are doing, simply do not do it.
 
 Help you cleaning your Uploads Directory and your Media Library. It checks if:
 
@@ -18,9 +20,9 @@ Help you cleaning your Uploads Directory and your Media Library. It checks if:
 - the media is present in a WP gallery
 - a retina image is orphan
 
-If not, it will be added to a specific dashboard and you can trash them from there. After more testing, you can trash them definitely. You can also choose to "ignore" specific files.
+Files detected as un-used are added to a specific dashboard where you can choose to trash them. They will be then moved to a trash internal to the plugin. After more testing, you can trash them definitely.
 
-This plugin deletes files so be careful to backup your files and databases before using it, especially the first time. 
+Again, this plugin deletes files so be careful. Backup is really important!
 
 It has been tested with WP Retina 2x and WPML.
 
@@ -40,7 +42,7 @@ Replace all the files. Nothing else to do.
 == Frequently Asked Questions ==
 
 = Is it safe? =
-How can a plugin that deletes files be 100% safe? ;) I did my best (and will improve it in every way I can) but it's impossible to cover all the cases. On a normal WordPress install it should work perfectly, however other themes and plugins can do whatever they want do and register files in their own way, not always going through the API. I ran it on a few big websites and it performed very well. Make a backup (database + uploads directory) then run it.
+How can a plugin that deletes files be 100% safe? ;) I did my best (and will improve it in every way I can) but it's impossible to cover all the cases. On a normal WordPress install it should work perfectly, however other themes and plugins can do whatever they want do and register files in their own way, not always going through the API. I ran it on a few big websites and it performed very well. Make a backup (database + uploads directory) then run it. I insist: BACKUP! ;)
 
 = What is 'Reset' doing exactly? =
 It re-creates the WP Media Cleaner table in the database. You will need to re-run the scan after this.
@@ -56,6 +58,9 @@ Please contact me through my website <a href='http://www.totorotimes.com'>Totoro
 1. Media -> Media Cleaner
 
 == Changelog ==
+
+= 2.2.6 =
+* Fix: Scan for multisite.
 
 = 2.2.4 =
 * Change: options are now all enabled by default.

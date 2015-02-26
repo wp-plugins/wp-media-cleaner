@@ -178,7 +178,7 @@ function wpmc_scan_do(files, medias, totalcount, totalissues) {
 		data = { action: 'wpmc_scan_do', type: 'media', data: newMedias };
 	}
 	else {
-		jQuery('#wpmc_progression').html("Done. " + totalissues + " issue(s) found. Please <a href='?page=wp-media-cleaner'>refresh</a> this page.");
+		jQuery('#wpmc_progression').html(totalissues + " issue(s) found. <a href='?page=wp-media-cleaner'>Refresh</a>.");
 		return;
 	}
 	jQuery.post(ajaxurl, data, function (response) {

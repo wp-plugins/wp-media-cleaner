@@ -3,7 +3,7 @@
 Plugin Name: WP Media Cleaner
 Plugin URI: http://www.meow.fr
 Description: Clean your Media Library and Uploads Folder.
-Version: 2.2.4
+Version: 2.2.6
 Author: Jordy Meow
 Author URI: http://www.meow.fr
 
@@ -380,7 +380,7 @@ function wpmc_delete( $id ) {
  *
  */
 
-$wpmc_exclude_dir = array( ".", "..", "wpmc-trash", ".htaccess", "ptetmp", "profiles" );
+$wpmc_exclude_dir = array( ".", "..", "wpmc-trash", ".htaccess", "ptetmp", "profiles", "sites" );
 
 function wpmc_list_uploaded_files( $basedir, $dir ) {
 	wpmc_reset_issues();
@@ -810,12 +810,12 @@ function wpmc_screen() {
 								if ( $issue->type == 0 ) {
 									// FILE
 									$upload_dir = wp_upload_dir();
-									echo "<img style='max-width: 48px; max-height: 48px;' src='" . $upload_dir['baseurl'] . '/' . $issue->path . "' />";			
+									echo "<img style='max-width: 48px; max-height: 48px;' src='" . htmlspecialchars( $upload_dir['baseurl'], ENT_QUOTES ) . '/' . $issue->path . "' />";			
 								}
 								else {
 									// MEDIA
 									$attachmentsrc = wp_get_attachment_image_src( $issue->postId, 'thumbnail' );
-									echo "<img style='max-width: 48px; max-height: 48px;' src='" . $attachmentsrc[0] . "' />";
+									echo "<img style='max-width: 48px; max-height: 48px;' src='" . htmlspecialchars( $attachmentsrc[0], ENT_QUOTES ) . "' />";
 								}
 							}
 						?>
