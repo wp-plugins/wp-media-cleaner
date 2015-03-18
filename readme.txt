@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_i
 Tags: management, admin, file, files, images, image, media, libary, upload, clean, cleaning
 Requires at least: 3.5
 Tested up to: 4.1.1
-Stable tag: 2.2.6
+Stable tag: 2.4.0
 
 Help you cleaning your Uploads Directory and your Media Library.
 
@@ -42,7 +42,7 @@ Replace all the files. Nothing else to do.
 == Frequently Asked Questions ==
 
 = Is it safe? =
-How can a plugin that deletes files be 100% safe? ;) I did my best (and will improve it in every way I can) but it's impossible to cover all the cases. On a normal WordPress install it should work perfectly, however other themes and plugins can do whatever they want do and register files in their own way, not always going through the API. I ran it on a few big websites and it performed very well. Make a backup (database + uploads directory) then run it. I insist: BACKUP! ;)
+NO! :) How can a plugin that deletes files be 100% safe? ;) I did my best (and will improve it in every way I can) but it's impossible to cover all the cases. On a normal WordPress install it should work perfectly, however other themes and plugins can do whatever they want do and register files in their own way, not always going through the API. I ran it on a few big websites and it performed very well. Make a backup (database + uploads directory) then run it. Again, I insist: BACKUP, BACKUP, BACKUP! Don't come here to complain it deletes your files, because, yes, it deletes your files. The plugin tries its best to help you and it is the only plugin that does it well.
 
 = What is 'Reset' doing exactly? =
 It re-creates the WP Media Cleaner table in the database. You will need to re-run the scan after this.
@@ -58,6 +58,11 @@ Please contact me through my website <a href='http://www.totorotimes.com'>Totoro
 1. Media -> Media Cleaner
 
 == Changelog ==
+
+= 2.4.0 =
+* Fix: Cross site scripting vulnerability fixes.
+* Change: Many enhancements and fixes made by Matt (http://www.twistedtek.net/). Please thanks him :)
+* Info: Please perform a "Reset" in the plugin dashboard after installing this new version.
 
 = 2.2.6 =
 * Fix: Scan for multisite.
