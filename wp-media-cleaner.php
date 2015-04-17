@@ -3,7 +3,7 @@
 Plugin Name: WP Media Cleaner
 Plugin URI: http://www.meow.fr
 Description: Clean your Media Library and Uploads Folder.
-Version: 2.4.0
+Version: 2.4.2
 Author: Jordy Meow
 Author URI: http://www.meow.fr
 
@@ -168,10 +168,32 @@ function wpmc_get_galleries_images( $force = false ) {
 			$galleries = get_post_galleries_images( $post );
 			foreach( $galleries as $gallery ) {
 				foreach( $gallery as $image ) {
-					array_push($galleries_images, $image);					
+					array_push($galleries_images, $image);			
 				}
 			}
 		}
+		
+		$post_galleries = get_posts( array(
+			'tax_query' => array(
+				array(
+				  'taxonomy' => 'post_format',
+				  'field'    => 'slug',
+				  'terms'    => array( 'post-format-gallery' ),
+				  'operator' => 'IN'
+				)
+			)
+		) );
+		
+		foreach( (array) $post_galleries as $gallery_post ) {
+			$arrImages = get_children('post_type=attachment&post_mime_type=image&post_parent=' . $gallery_post->ID ); 
+			if ($arrImages) {
+				foreach( (array) $arrImages as $image_post ) {
+					array_push($galleries_images, $image_post->guid);
+				}
+			}
+		}
+		wp_reset_postdata();
+
 		set_transient( "galleries_images", $galleries_images, 60 * 60 * 2 );
 	}
 	return $galleries_images;
@@ -478,12 +500,17 @@ function wpmc_check_db_has_background_or_header( $file ) {
 
 function wpmc_check_in_gallery( $file ) {
 	$file = wpmc_clean_uploaded_filename($file);
+	
+	$uploads = wp_upload_dir();
+	$parsedURL = parse_url($uploads['baseurl']);
+	$regex_match_file = '('.preg_quote($file).')';
+	$regex = addcslashes('(?:(?:http(?:s)?\\:)?//'.preg_quote($parsedURL['host']).')?'.preg_quote($parsedURL['path']).'/'.$regex_match_file, '/');
+	
 	$images = wpmc_get_galleries_images();
 	foreach ( $images as $image ) {
-		if ( strpos( $image, $file ) !== false) {
-			//error_log("{$file} found in GALLERY");
-			return true;
-		}
+		$found = preg_match('/'.$regex.'/i', $image);
+		//if ($found) error_log("{$file} found in GALLERY");
+		if ($found) return true;
 	}
 	return false;
 }
@@ -526,6 +553,7 @@ function wpmc_check_db_has_meta( $file, $attachment_id=0 ) {
 	return ( $mediaCount > 0 );
 }
 
+
 function wpmc_check_db_has_content( $file ) {
 	global $wpdb;
 	$wp_4dot0_plus = version_compare( get_bloginfo('version'), '4.0', '>=' );
@@ -535,7 +563,7 @@ function wpmc_check_db_has_content( $file ) {
 	$uploads = wp_upload_dir();
 	$parsedURL = parse_url($uploads['baseurl']);
 	$regex_match_file = '('.preg_quote($file).')';
-	$regex = addcslashes('=[\'"](?:(?:http(?:s)?\\:)?//'.preg_quote($parsedURL['host']).')?(?:'.preg_quote($parsedURL['path']).'/)'.$regex_match_file.'(?:\\?[^\'"]*)*[\'"]', '/');
+	$regex = addcslashes('=[\'"](?:(?:http(?:s)?\\:)?//'.preg_quote($parsedURL['host']).')?'.preg_quote($parsedURL['path']).'/'.$regex_match_file.'(?:\\?[^\'"]*)*[\'"]', '/');
 	$regex_mysql = str_replace('(?:', '(', $regex);
 	
 	$sql = $wpdb->prepare( "SELECT COUNT(*) FROM $wpdb->posts WHERE post_type <> 'attachment' AND post_content REGEXP %s", $regex_mysql );

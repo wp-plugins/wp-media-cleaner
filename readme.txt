@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_i
 Tags: management, admin, file, files, images, image, media, libary, upload, clean, cleaning
 Requires at least: 3.5
 Tested up to: 4.1.1
-Stable tag: 2.4.0
+Stable tag: 2.4.2
 
 Help you cleaning your Uploads Directory and your Media Library.
 
@@ -42,22 +42,30 @@ Replace all the files. Nothing else to do.
 == Frequently Asked Questions ==
 
 = Is it safe? =
-NO! :) How can a plugin that deletes files be 100% safe? ;) I did my best (and will improve it in every way I can) but it's impossible to cover all the cases. On a normal WordPress install it should work perfectly, however other themes and plugins can do whatever they want do and register files in their own way, not always going through the API. I ran it on a few big websites and it performed very well. Make a backup (database + uploads directory) then run it. Again, I insist: BACKUP, BACKUP, BACKUP! Don't come here to complain it deletes your files, because, yes, it deletes your files. The plugin tries its best to help you and it is the only plugin that does it well.
+No! :) How can a plugin that deletes files be 100% safe? ;) I did my best (and will improve it in every way I can) but it is impossible to cover all the cases. On a normal WordPress install it should work perfectly, however other themes and plugins can do whatever they want do and register files in their own way, not always going through the API. I ran it on a few big websites and it performed very well. Make a backup (database + uploads directory) then run it. Again, I insist: BACKUP, BACKUP, BACKUP! Don't come here to complain that it deleted your files, because, yes, it deletes files. The plugin tries its best to help you and it is the only plugin that does it well.
 
 = What is 'Reset' doing exactly? =
 It re-creates the WP Media Cleaner table in the database. You will need to re-run the scan after this.
 
-= I donated, how can I get rid of the donation button? =
+= I want to thank you! = 
+Donations can be made through Paypal here: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=H2S7S3G4XMJ6J. They are really rare but always welcomed :)
+
+= I donated, can I get rid of the donation button? =
 Of course. I don't like to see too many of those buttons neither ;) You can disable the donation buttons from all my plugins by adding this to your wp-config.php: `define('WP_HIDE_DONATION_BUTTONS', true);`
 
 = Can I contact you? =
-Please contact me through my website <a href='http://www.totorotimes.com'>Totoro Times</a>. Thanks!
+Please avoid contacting me directly. Write about your issue here: https://github.com/tigroumeow/wp-media-cleaner/issues. The contributors and I will have a look at it. The more details, the better :)
 
 == Screenshots ==
 
 1. Media -> Media Cleaner
 
 == Changelog ==
+
+= 2.4.2 =
+* Add: Inclusion of gallery post format images.
+* Fix: Better gallery URL matching.
+* Info: Thanks to syntax53 for those improvements via GitHub (https://github.com/tigroumeow/wp-media-cleaner/pull/3). Please review Media Cleaner if you like it. The plugin needs reviews to live. Thank you :) (https://wordpress.org/support/view/plugin-reviews/wp-media-cleaner)
 
 = 2.4.0 =
 * Fix: Cross site scripting vulnerability fixes.
