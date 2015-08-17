@@ -1,7 +1,8 @@
 <?php
 
 	if ( !function_exists( 'jordy_meow_flattr' ) ) {
-		add_action( 'admin_head', 'jordy_meow_flattr', 1 );
+		if ( !defined( 'WP_HIDE_DONATION_BUTTONS' ) )
+			add_action( 'admin_head', 'jordy_meow_flattr', 1 );
 		function jordy_meow_flattr () {
 			?>
 				<script type="text/javascript">
@@ -18,8 +19,10 @@
 			<?php
 		}
 		function by_jordy_meow() {
-			echo '<div><span style="font-size: 13px; position: relative; top: -6px;">Developed by <a style="text-decoration: none;" href="https://plus.google.com/+JordyMeow">Jordy Meow</a></span>
-				<a class="FlattrButton" style="display:none;" rev="flattr;button:compact;" title="Jordy Meow" href="http://profiles.wordpress.org/TigrouMeow/"></a></div>';
+			echo '<div><span style="font-size: 13px; position: relative; top: -6px;">Developed by <a style="text-decoration: none;" href="http://www.meow.fr" target="_blank">Jordy Meow</a></span>';
+			if ( !defined( 'WP_HIDE_DONATION_BUTTONS' ) )
+				echo ' <a class="FlattrButton" style="display:none;" rev="flattr;button:compact;" title="Jordy Meow" href="http://profiles.wordpress.org/TigrouMeow/"></a>';
+			echo '</div>';
 		}
 	}
 
@@ -28,8 +31,7 @@
 			if ( defined( 'WP_HIDE_DONATION_BUTTONS' ) && WP_HIDE_DONATION_BUTTONS == true )
 				return;
 			if ( $showWPE ) {
-				echo '<a style="float: right;" target="_blank" href="http://www.shareasale.com/r.cfm?b=398769&amp;u=767054&amp;m=41388&amp;urllink=&amp;afftrack="><img src="http://static.shareasale.com/image/41388/Feature-Fast-468x60.jpeg" border="0" /></a>';
-				//echo "<a href='http://www.shareasale.com/r.cfm?B=394686&U=767054&M=41388&urllink=' target='_blank'><img style='float: right; margin-top: 5px; margin-left: 15px;' width='120px' height='34px' src='" . plugins_url('/img/wpengine.png', __FILE__) . "' /></a>";
+				echo '<a style="float: right; margin-top: -8px; text-align: right; text-decoration: none; font-size: 11px; color: gray; font-style: italic;" target="_blank" href="http://www.shareasale.com/r.cfm?b=398769&amp;u=767054&amp;m=41388&amp;urllink=&amp;afftrack=">I love and strongly recommend WP Engine. My plugins are all tested with it.<br /><img style="height: 55px;" src="http://static.shareasale.com/image/41388/Feature-Fast-468x60.jpeg" border="0" /></a>';
 			}
 		}
 	}

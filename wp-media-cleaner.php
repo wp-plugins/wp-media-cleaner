@@ -3,7 +3,7 @@
 Plugin Name: WP Media Cleaner
 Plugin URI: http://www.meow.fr
 Description: Clean your Media Library and Uploads Folder.
-Version: 2.4.2
+Version: 2.5.0
 Author: Jordy Meow
 Author URI: http://www.meow.fr
 
@@ -14,13 +14,14 @@ http://www.gnu.org/licenses/gpl.html
 Big thanks to Matt (http://www.twistedtek.net/) for all the
 enhancements he made to the plugin.
 
-Originally developed for two of my websites: 
-- Totoro Times (http://www.totorotimes.com) 
+Originally developed for two of my websites:
+- Totoro Times (http://www.totorotimes.com)
 - Haikyo (http://www.haikyo.org)
 */
 
 add_action( 'admin_menu', 'wpmc_admin_menu' );
 add_action( 'admin_enqueue_scripts', 'wpmc_wp_enqueue_scripts' );
+add_action( 'admin_print_scripts', 'wpmc_admin_inline_js' );
 add_action( 'wp_ajax_wpmc_scan', 'wpmc_wp_ajax_wpmc_scan' );
 add_action( 'wp_ajax_wpmc_get_all_issues', 'wpmc_wp_ajax_wpmc_get_all_issues' );
 add_action( 'wp_ajax_wpmc_get_all_deleted', 'wpmc_wp_ajax_wpmc_get_all_deleted' );
@@ -32,7 +33,7 @@ add_action( 'wp_ajax_wpmc_recover_do', 'wpmc_wp_ajax_wpmc_recover_do' );
 register_activation_hook( __FILE__, 'wpmc_activate' );
 register_uninstall_hook( __FILE__, 'wpmc_uninstall' );
 
-require( 'jordy_meow_footer.php' );
+require( 'meow_footer.php' );
 require( 'wpmc_settings.php' );
 
 global $wpmc_debug;
@@ -51,7 +52,7 @@ function wpmc_wp_ajax_wpmc_delete_do () {
 		$success += ( wpmc_delete( $piece ) ? 1 : 0 );
 	}
 	ob_end_clean();
-	echo json_encode( 
+	echo json_encode(
 		array(
 			'success' => true,
 			'result' => array( 'data' => $data, 'success' => $success ),
@@ -69,7 +70,7 @@ function wpmc_wp_ajax_wpmc_ignore_do () {
 		$success += ( wpmc_ignore( $piece ) ? 1 : 0 );
 	}
 	ob_end_clean();
-	echo json_encode( 
+	echo json_encode(
 		array(
 			'success' => true,
 			'result' => array( 'data' => $data, 'success' => $success ),
@@ -87,7 +88,7 @@ function wpmc_wp_ajax_wpmc_recover_do () {
 		$success +=  ( wpmc_recover( $piece ) ? 1 : 0 );
 	}
 	ob_end_clean();
-	echo json_encode( 
+	echo json_encode(
 		array(
 			'success' => true,
 			'result' => array( 'data' => $data, 'success' => $success ),
@@ -99,6 +100,7 @@ function wpmc_wp_ajax_wpmc_recover_do () {
 
 function wpmc_wp_ajax_wpmc_scan_do () {
 	global $wpmc_debug;
+	wpmc_check_db();
 	ob_start();
 	$type = $_POST['type'];
 	$data = $_POST['data'];
@@ -113,7 +115,7 @@ function wpmc_wp_ajax_wpmc_scan_do () {
 			$success += ( wpmc_check_media( $piece ) ? 1 : 0 );
 		}
 	}
-	echo json_encode( 
+	echo json_encode(
 		array(
 			'success' => true,
 			'result' => array( 'type' => $type, 'data' => $data, 'success' => $success ),
@@ -127,7 +129,7 @@ function wpmc_wp_ajax_wpmc_get_all_deleted () {
 	global $wpdb;
 	$table_name = $wpdb->prefix . "wpmcleaner";
 	$ids = $wpdb->get_col( "SELECT id FROM $table_name WHERE ignored = 0 AND deleted = 1" );
-	echo json_encode( 
+	echo json_encode(
 		array(
 			'results' => array( 'ids' => $ids ),
 			'success' => true,
@@ -145,7 +147,7 @@ function wpmc_wp_ajax_wpmc_get_all_issues () {
 		$ids = $wpdb->get_col( "SELECT id FROM $table_name WHERE ignored = 0 AND deleted = 1" );
 	else
 		$ids = $wpdb->get_col( "SELECT id FROM $table_name WHERE ignored = 0 AND deleted = 0" );
-	echo json_encode( 
+	echo json_encode(
 		array(
 			'results' => array( 'ids' => $ids ),
 			'success' => true,
@@ -175,7 +177,7 @@ function wpmc_get_original_images( $force = false ) {
 			if (is_array($source_parts) && !empty($source_parts)) {
 				array_pop($source_parts); $prepend_path = implode('/', $source_parts).'/';
 			}
-			
+
 			$backup_sizes = get_post_meta( $post_id, '_wp_attachment_backup_sizes', true );
 			if ( is_array($backup_sizes) && !empty($backup_sizes) ) {
 				foreach( $backup_sizes as $key => $data) {
@@ -212,11 +214,11 @@ function wpmc_get_galleries_images( $force = false ) {
 			$galleries = get_post_galleries_images( $post );
 			foreach( $galleries as $gallery ) {
 				foreach( $gallery as $image ) {
-					array_push($galleries_images, $image);			
+					array_push($galleries_images, $image);
 				}
 			}
 		}
-		
+
 		$post_galleries = get_posts( array(
 			'tax_query' => array(
 				array(
@@ -227,9 +229,9 @@ function wpmc_get_galleries_images( $force = false ) {
 				)
 			)
 		) );
-		
+
 		foreach( (array) $post_galleries as $gallery_post ) {
-			$arrImages = get_children('post_type=attachment&post_mime_type=image&post_parent=' . $gallery_post->ID ); 
+			$arrImages = get_children('post_type=attachment&post_mime_type=image&post_parent=' . $gallery_post->ID );
 			if ($arrImages) {
 				foreach( (array) $arrImages as $image_post ) {
 					array_push($galleries_images, $image_post->guid);
@@ -243,58 +245,42 @@ function wpmc_get_galleries_images( $force = false ) {
 	return $galleries_images;
 }
 
-function wpmc_wp_ajax_wpmc_scan () {
+function wpmc_wp_ajax_wpmc_scan() {
 	global $wpdb;
-	$library = $_POST[ 'library' ];
-	$upload = $_POST[ 'upload' ];
+	$medias = $_POST['medias'] == 'true';
+	$uploads = $_POST['uploads'] == 'true';
+	$path = isset( $_POST['path'] ) ? $_POST['path'] : null;
 	$upload_folder = wp_upload_dir();
-	
-	delete_transient( 'wpmc_posts_with_shortcode' );
-	
-	// Reset and prepare all the Attachment IDs of all the galleries 
-	wpmc_get_galleries_images( true );
-	wpmc_get_original_images ( true );
-	
-	if ( wpmc_getoption( 'scan_files', 'wpmc_basics', true ) ) {
-		$files = wpmc_list_uploaded_files( $upload_folder['basedir'], $upload_folder['basedir'] );
-	} else {
-		$files = array();
+
+	if ( $medias || ( $uploads && empty( $path ) ) ) {
+		// Reset and prepare all the Attachment IDs of all the galleries
+		wpmc_reset_issues();
+		delete_transient( 'wpmc_posts_with_shortcode' );
+		wpmc_get_galleries_images( true );
+		wpmc_get_original_images ( true );
 	}
 
-	//prevent double scanning by removing filesystem entries that we have DB entries for
-	$medias = array(); $media_file_paths = array();
-	if ( wpmc_getoption( 'scan_media', 'wpmc_basics', true ) ) {
-		$results = $wpdb->get_results( "SELECT p.ID, pm.meta_value path FROM $wpdb->posts p LEFT JOIN $wpdb->postmeta pm ON p.ID = pm.post_id WHERE p.post_status = 'inherit' AND p.post_type = 'attachment' AND pm.meta_key = '_wp_attached_file'" );
-		foreach ( $results as $attachment ) {
-			$medias[] = $attachment->ID;
-			$media_file_paths[] = $attachment->path;
-			$key = array_search($attachment->path, $files);
-			if (!empty($key)) unset($files[$key]);
-		}
-		
-		//don't bother scanning alternate image sizes that have a mainfile in the media DB
-		foreach ($files as $key => $file) {
-			$source_path = $file;
-			$path_parts = pathinfo($source_path);
-			if (in_array($path_parts['extension'], array('jpg','jpeg','jpe','gif','png','bmp','tif','tiff','ico'), false)) {
-				$image_size_regex = "/([_-]\\d+x\\d+(?=\\.[a-z]{3,4}$))/i";
-				$source_path = preg_replace($image_size_regex, '', $source_path);
-			}
-			if ($source_path != $file) {
-				if (in_array($source_path, $media_file_paths)) unset($files[$key]);
-			}
-		}
-		
-		$files = array_values($files); //re-key
+	if ( $uploads ) {
+		$files = wpmc_list_uploaded_files( $path ? ( trailingslashit( $upload_folder['basedir'] ) . $path ) : $upload_folder['basedir'] );
+		echo json_encode(
+			array(
+				'results' => $files, 'success' => true, 'message' => __( "Files retrieved.", 'wp-media-cleaner' )
+			)
+		);
+		die();
 	}
-	
-	echo json_encode( 
-		array(
-			'results' => array( 'files' => $files, 'medias' => $medias ),
-			'success' => true,
-			'message' => __( "Lists generated.", 'wp-media-cleaner' )
-		)
-	);
+
+	if ( $medias ) {
+		// Prevent double scanning by removing filesystem entries that we have DB entries for
+		$results = $wpdb->get_col( "SELECT p.ID FROM $wpdb->posts p WHERE p.post_status = 'inherit' AND p.post_type = 'attachment'" );
+		echo json_encode(
+			array( 'results' => $results, 'success' => true, 'message' => __( "Medias retrieved.", 'wp-media-cleaner' ) )
+		);
+		die();
+	}
+
+	// No task.
+	echo json_encode( array( 'success' => false, 'message' => __( "No task.", 'wp-media-cleaner' ) ) );
 	die();
 }
 
@@ -335,7 +321,7 @@ function wpmc_recover( $id ) {
 		die('Failed to move the file.');
 	}
 	$wpdb->query( $wpdb->prepare( "UPDATE $table_name SET deleted = 0 WHERE id = %d", $id ) );
-	return true;	
+	return true;
 }
 
 function wpmc_trash_file( $fileIssuePath ) {
@@ -357,6 +343,7 @@ function wpmc_trash_file( $fileIssuePath ) {
 	catch (Exception $e) {
 		return false;
 	}
+	wpmc_clean_dir( dirname( $originalPath ) );
 	return true;
 }
 
@@ -367,17 +354,25 @@ function wpmc_ignore( $id ) {
 	return true;
 }
 
+function wpmc_endsWith( $haystack, $needle )
+{
+  $length = strlen( $needle );
+  if ( $length == 0 )
+    return true;
+  return ( substr( $haystack, -$length ) === $needle );
+}
+
 function wpmc_clean_dir( $dir ) {
-	/*
-	// Maybe we should check if the directory is empty after the deletion and remove it?
-	// Anyway, that code is not working ;)
-	if ( realpath( wpmc_trashdir() ) !== realpath( dirname( $trashPath ) ) ) {
-		$fi = new FilesystemIterator( dirname( $trashPath ), FilesystemIterator::SKIP_DOTS );
-		if ( iterator_count($fi) == 0 ) {
-			unlink( dirname( $trashPath ) );
+	if ( !file_exists( $dir ) )
+		return;
+	else if ( wpmc_endsWith( $dir, 'uploads' ) )
+		return;
+	$found = array_diff( scandir( $dir ), array( '.', '..' ) );
+	if ( count( $found ) < 1 ) {
+		if ( rmdir( $dir ) ) {
+			wpmc_clean_dir( dirname( $dir ) );
 		}
 	}
-	*/
 }
 
 function wpmc_delete( $id ) {
@@ -388,31 +383,35 @@ function wpmc_delete( $id ) {
 	$issue->path = preg_replace('/'.$regex.'/i', '$1', $issue->path); // remove " (+ 6 files)" from path
 
 	//make sure there isn't a media DB entry
-	if ($issue->type == 0) {
-		$attachmentid = wpmc_find_attachment_id_by_file($issue->path);
-		if ($attachmentid) {
-			die("Issue listed as filesystem but media db exists (#{$attachmentid}).");
+	if ( $issue->type == 0 ) {
+		$attachmentid = wpmc_find_attachment_id_by_file( $issue->path );
+		if ( $attachmentid ) {
+			error_log( "File Cleaner: Issue listed as filesystem but media db exists (#{$attachmentid})." );
 		}
 	}
-	
+
 	// Empty trash
 	if ( $issue->deleted == 1 ) {
 		$trashPath = trailingslashit( wpmc_trashdir() ) . $issue->path;
 		if ( !unlink( $trashPath ) )
-			die('Failed to delete the file.');
+			error_log( 'Failed to delete the file.' );
 		$wpdb->query( $wpdb->prepare( "DELETE FROM $table_name WHERE id = %d", $id ) );
-		wpmc_clean_dir( $trashPath );
+		wpmc_clean_dir( dirname( $trashPath ) );
 		return true;
 	}
 
 	// Remove file
+	if ( get_transient( "wpmc_deleted_one" ) )
+		return false;
+	else if ( !wpmc_is_pro() )
+		set_transient( "wpmc_deleted_one", true, 4 );
+
 	if ( $issue->type == 0 ) {
 		if ( wpmc_trash_file( $issue->path ) )
 			$wpdb->query( $wpdb->prepare( "UPDATE $table_name SET deleted = 1 WHERE id = %d", $id ) );
-		wpmc_clean_dir( $issue->path );
 		return true;
 	}
-	
+
 	// Remove DB media
 	if ( $issue->type == 1 ) {
 
@@ -426,15 +425,15 @@ function wpmc_delete( $id ) {
 		$file = wpmc_clean_uploaded_filename( $fullpath );
 		if ( wpmc_trash_file( $file ) ) {
 			$table_name = $wpdb->prefix . "wpmcleaner";
-			$wpdb->insert( $table_name, 
-				array( 
+			$wpdb->insert( $table_name,
+				array(
 					'time' => current_time('mysql'),
 					'type' => 0,
 					'deleted' => 1,
 					'path' => $file,
 					'size' => $size,
 					'issue' => $issue->issue
-				) 
+				)
 			);
 		}
 
@@ -456,15 +455,15 @@ function wpmc_delete( $id ) {
 					// user the chance to restore it.
 					if ( wpmc_trash_file( $file ) ) {
 						$table_name = $wpdb->prefix . "wpmcleaner";
-						$wpdb->insert( $table_name, 
-							array( 
+						$wpdb->insert( $table_name,
+							array(
 								'time' => current_time('mysql'),
 								'type' => 0,
 								'deleted' => 1,
 								'path' => $file,
 								'size' => $size,
 								'issue' => $issue->issue
-							) 
+							)
 						);
 					}
 
@@ -489,20 +488,18 @@ function wpmc_delete( $id ) {
 
 $wpmc_exclude_dir = array( ".", "..", "wpmc-trash", ".htaccess", "ptetmp", "profiles", "sites" );
 
-function wpmc_list_uploaded_files( $basedir, $dir ) {
-	wpmc_reset_issues();
+function wpmc_list_uploaded_files( $dir ) {
 	global $wpmc_exclude_dir;
 	$result = array();
 	$files = scandir( $dir );
 	$files = array_diff( $files, $wpmc_exclude_dir );
 	foreach( $files as $file ) {
 		$fullpath = trailingslashit( $dir ) . $file;
-		if ( is_dir( $fullpath ) ) {
-			$sub_files = wpmc_list_uploaded_files( $basedir, $fullpath );
-			$result = array_merge( $result, $sub_files );
-			continue;
+		if ( !wpmc_getoption( 'scan_non_ascii', 'wpmc_basics', false ) ) {
+			if ( mb_detect_encoding( $file, 'ASCII', true ) === false )
+				continue;
 		}
-		array_push( $result, wpmc_clean_uploaded_filename( $fullpath  ) );
+		array_push( $result, array( 'path' => wpmc_clean_uploaded_filename( $fullpath ), 'type' => is_dir( $fullpath ) ? 'dir' : 'file' ) );
 	}
 	return $result;
 }
@@ -527,7 +524,7 @@ function wpmc_check_db_has_background_or_header( $file ) {
 		if ( $custom_header && $custom_header->url ) {
 			if ( strpos( $custom_header->url, $file ) !== false )
 				if ($wpmc_debug) error_log("{$file} found in header");
-				return true;	
+				return true;
 		}
 	}
 
@@ -546,12 +543,12 @@ function wpmc_check_db_has_background_or_header( $file ) {
 function wpmc_check_in_gallery( $file ) {
 	global $wpmc_debug;
 	$file = wpmc_clean_uploaded_filename($file);
-	
+
 	$uploads = wp_upload_dir();
 	$parsedURL = parse_url($uploads['baseurl']);
 	$regex_match_file = '('.preg_quote($file).')';
 	$regex = addcslashes('(?:(?:http(?:s)?\\:)?//'.preg_quote($parsedURL['host']).')?'.preg_quote($parsedURL['path']).'/'.$regex_match_file, '/');
-	
+
 	$images = wpmc_get_galleries_images();
 	foreach ( $images as $image ) {
 		$found = preg_match('/'.$regex.'/i', $image);
@@ -582,12 +579,12 @@ function wpmc_check_db_has_meta( $file, $attachment_id=0 ) {
 	$regex_mysql = str_replace('(?:', '(', $regex);
 
 	if ($attachment_id > 0) {
-		$mediaCount = $wpdb->get_var( 
-			$wpdb->prepare( "SELECT COUNT(*) FROM $wpdb->postmeta WHERE post_id != %d AND meta_key != '_wp_attached_file' AND (meta_value REGEXP %s OR meta_value = %d)", $attachment_id, $regex_mysql, $attachment_id ) 
+		$mediaCount = $wpdb->get_var(
+			$wpdb->prepare( "SELECT COUNT(*) FROM $wpdb->postmeta WHERE post_id != %d AND meta_key != '_wp_attached_file' AND (meta_value REGEXP %s OR meta_value = %d)", $attachment_id, $regex_mysql, $attachment_id )
 			);
 	} else {
-		$mediaCount = $wpdb->get_var( 
-			$wpdb->prepare( "SELECT COUNT(*) FROM $wpdb->postmeta WHERE meta_key != '_wp_attached_file' AND meta_value REGEXP %s", $regex_mysql ) 
+		$mediaCount = $wpdb->get_var(
+			$wpdb->prepare( "SELECT COUNT(*) FROM $wpdb->postmeta WHERE meta_key != '_wp_attached_file' AND meta_value REGEXP %s", $regex_mysql )
 			);
 	}
 	if ( $wpmc_debug && $mediaCount > 0 ) error_log("{$file} found in POSTMETA");
@@ -598,30 +595,30 @@ function wpmc_check_db_has_meta( $file, $attachment_id=0 ) {
 function wpmc_check_db_has_content( $file ) {
 	global $wpdb, $wpmc_debug;
 	$wp_4dot0_plus = version_compare( get_bloginfo('version'), '4.0', '>=' );
-	
+
 	$file = wpmc_clean_uploaded_filename($file);
-	
+
 	$uploads = wp_upload_dir();
 	$parsedURL = parse_url($uploads['baseurl']);
 	$regex_match_file = '('.preg_quote($file).')';
 	$regex = addcslashes('=[\'"](?:(?:http(?:s)?\\:)?//'.preg_quote($parsedURL['host']).')?'.preg_quote($parsedURL['path']).'/'.$regex_match_file.'(?:\\?[^\'"]*)*[\'"]', '/');
 	$regex_mysql = str_replace('(?:', '(', $regex);
-	
-	$sql = $wpdb->prepare( "SELECT COUNT(*) FROM $wpdb->posts WHERE post_type <> 'attachment' AND post_content REGEXP %s", $regex_mysql );
+
+	$sql = $wpdb->prepare( "SELECT COUNT(*) FROM $wpdb->posts WHERE post_type <> 'revision' AND post_type <> 'attachment' AND post_content REGEXP %s", $regex_mysql );
 	$mediaCount = $wpdb->get_var( $sql );
 	if ( $wpmc_debug && $mediaCount > 0 ) error_log("{$file} found in POST_CONTENT");
 	if ( $mediaCount > 0 ) return true;
-	
+
 	global $shortcode_tags;
-	$active_tags = array_keys($shortcode_tags);
-	if (!empty($active_tags)) {
+	$active_tags = array_keys( $shortcode_tags );
+	if ( !empty( $active_tags ) ) {
 		$post_contents = get_transient( 'wpmc_posts_with_shortcode' );
 		if ( $post_contents === false ) {
 			$post_contents = array();
 			$query = array();
 			$query[] = "SELECT `ID`, `post_content` FROM {$wpdb->posts}";
-			$query[] = "WHERE 1=1";
-	
+			$query[] = "WHERE post_type <> 'revision' AND post_type <> 'attachment'";
+
 			$sub_query = array();
 			if ( $wp_4dot0_plus ) {
 				foreach ($active_tags as $tag) {
@@ -632,19 +629,19 @@ function wpmc_check_db_has_content( $file ) {
 					$sub_query[] = "`post_content` LIKE '%[" . like_escape( esc_sql( $tag ) ) . "%'";
 				}
 			}
-			
+
 			$query[] = "AND (".implode(" OR ", $sub_query).")";
 			$sql = join(' ', $query);
-			
+
 			$results = $wpdb->get_results( $sql );
-			foreach ($results as $key => $data) {	
-				$post_contents['post_'.$data->ID] = do_shortcode($data->post_content);
+			foreach ($results as $key => $data) {
+				$post_contents['post_'.$data->ID] = do_shortcode( $data->post_content );
 			}
-			
+
 			global $wp_registered_widgets;
 			$active_widgets = get_option( 'sidebars_widgets' );
 			foreach ( $active_widgets as $sidebar_name => $sidebar_widgets ) {
-				if ($sidebar_name != 'wp_inactive_widgets' && !empty($sidebar_widgets) && is_array($sidebar_widgets)) {
+				if ($sidebar_name != 'wp_inactive_widgets' && !empty( $sidebar_widgets ) && is_array( $sidebar_widgets ) ) {
 					$i = 0;
 					foreach ($sidebar_widgets as $widget_instance) {
 						$widget_class = $wp_registered_widgets[$widget_instance]['callback'][0]->option_name;
@@ -657,17 +654,18 @@ function wpmc_check_db_has_content( $file ) {
 					}
 				}
 			}
-			
-			if (!empty($post_contents)) {
+
+			if ( !empty( $post_contents ) ) {
 				set_transient( 'wpmc_posts_with_shortcode', $post_contents, 2 * 60 * 60 );
 			}
 		}
-		
-		if (!empty($post_contents)) {
-			foreach ($post_contents as $key => $content) {	
-				$found = preg_match('/'.$regex.'/i', $content);
-				if ($wpmc_debug && $found) error_log("{$file} found in {$key} SHORTCODE/WIDGET");
-				if ($found) return true;
+
+		if ( !empty( $post_contents ) ) {
+			foreach ( $post_contents as $key => $content ) {
+				$found = preg_match( '/' . $regex . '/i', $content );
+				if ( $wpmc_debug && $found ) error_log( "File Cleaner: {$file} found in {$key} SHORTCODE/WIDGET" );
+				if ( $found )
+					return true;
 			}
 		}
 	}
@@ -699,53 +697,60 @@ function wpmc_check_file( $path ) {
 			return true;
 		else {
 			$table_name = $wpdb->prefix . "wpmcleaner";
-			$wpdb->insert( $table_name, 
-				array( 
+			$wpdb->insert( $table_name,
+				array(
 					'time' => current_time('mysql'),
 					'type' => 0,
 					'path' => $path,
 					'size' => filesize ($filepath),
 					'issue' => 'ORPHAN_RETINA'
-				) 
+				)
 			);
 			return false;
 		}
 	}
-	
+
 	$issue = "NONE";
 	$path_parts = pathinfo( $path );
 	if (wpmc_check_is_ignore( $path )) return true;
-	
-	$attachment_id = wpmc_find_attachment_id_by_file($path);
+
+	$attachment_id = wpmc_find_attachment_id_by_file( $path );
 	$source_path = $path;
 	$source_filepath = $filepath;
-	if (in_array($path_parts['extension'], array('jpg','jpeg','jpe','gif','png','bmp','tif','tiff','ico'), false)) {
+	if ( in_array( $path_parts['extension'], array('jpg','jpeg','jpe','gif','png','bmp','tif','tiff','ico' ), false ) ) {
 		$image_size_regex = "/([_-]\\d+x\\d+(?=\\.[a-z]{3,4}$))/i";
-		$source_path = preg_replace($image_size_regex, '', $path);
-		$source_filepath = preg_replace($image_size_regex, '', $filepath);
+		$potential_filepath = preg_replace( $image_size_regex, '', $filepath );
+		// After the dimensions (image size) has been removed, check if the base file
+		// exists. If it does, it means this is really an image size and not an independent
+		// file that looks like an image size.
+		if ( file_exists( $potential_filepath ) ) {
+			$source_path = preg_replace( $image_size_regex, '', $path );
+			$source_filepath = $potential_filepath;
+		}
 	}
 	$attachment_id_src = wpmc_find_attachment_id_by_file( $source_path );
 	if ( empty( $attachment_id_src ) || !file_exists( $source_filepath ) ) {
-		if (wpmc_check_is_original_backup($path)) {
+		if ( wpmc_check_is_original_backup( $path ) ) {
 			return TRUE;
 		} else {
 			$issue = "NO_MEDIA";
 		}
-	} elseif ($source_path != $path) {
+	} elseif ( $source_path != $path ) {
 		//this is an alternate thumbnail and the source is in the database
 		//we would only delete this when the source gets deleted
 		//will be checked when the source is scanned
 		return true;
-	} elseif ( wpmc_check_in_gallery( $path )
-		|| wpmc_check_db_has_background_or_header( $path ) 
-		|| wpmc_check_db_has_meta( $path, $attachment_id  )
-		|| wpmc_check_db_has_content( $path ) 
-		) {
-		return true;
+	// } elseif ( wpmc_check_in_gallery( $path )
+	// 	|| wpmc_check_db_has_background_or_header( $path )
+	// 	|| wpmc_check_db_has_meta( $path, $attachment_id  )
+	// 	|| wpmc_check_db_has_content( $path )
+	// 	) {
+	// 	return true;
 	} else {
-		$issue = "NO_CONTENT";
+		//$issue = "NO_CONTENT";
+		return true;
 	}
-	
+
 	//check for different image sizes
 	$path_parts = pathinfo( $filepath );
 	foreach (glob(trailingslashit($path_parts['dirname']).$path_parts['filename'].'*.'.$path_parts['extension']) as $thumbnail) {
@@ -754,9 +759,9 @@ function wpmc_check_file( $path ) {
 		if ($thumbnail_path_parts['filename'] != $path_parts['filename']) {
 			if ($wpmc_debug) error_log("checking THUMBNAIL-IMAGE ".$thumbnail);
 			if ( wpmc_check_in_gallery( $thumbnail )
-				|| wpmc_check_db_has_background_or_header( $thumbnail ) 
+				|| wpmc_check_db_has_background_or_header( $thumbnail )
 				|| wpmc_check_db_has_meta( $thumbnail, $attachment_id )
-				|| wpmc_check_db_has_content( $thumbnail ) 
+				|| wpmc_check_db_has_content( $thumbnail )
 				) {
 				return true;
 			}
@@ -765,14 +770,14 @@ function wpmc_check_file( $path ) {
 
 	$table_name = $wpdb->prefix . "wpmcleaner";
 	$filesize = file_exists( $filepath ) ? filesize ($filepath) : 0;
-	$wpdb->insert( $table_name, 
-		array( 
+	$wpdb->insert( $table_name,
+		array(
 			'time' => current_time('mysql'),
 			'type' => 0,
 			'path' => $path,
 			'size' => $filesize,
 			'issue' => $issue
-		) 
+		)
 	);
 	return false;
 }
@@ -807,8 +812,8 @@ function wpmc_clean_uploaded_filename( $fullpath ) {
 }
 
 function wpmc_check_media( $attachmentId ) {
-	
-	// Is it an image? 
+
+	// Is it an image?
 	$meta = wp_get_attachment_metadata( $attachmentId );
 	$isImage = isset( $meta, $meta['width'], $meta['height'] );
 
@@ -823,14 +828,14 @@ function wpmc_check_media( $attachmentId ) {
 	$issue = 'NO_CONTENT';
 	if ( file_exists( $fullpath ) ) {
 		$size = filesize( $fullpath );
-		
+
 		if ( wpmc_check_is_ignore( $mainfile )
 			|| wpmc_check_in_gallery( $mainfile )
-			|| wpmc_check_db_has_background_or_header( $mainfile ) 
-			|| wpmc_check_db_has_meta( $mainfile, $attachmentId ) 
+			|| wpmc_check_db_has_background_or_header( $mainfile )
+			|| wpmc_check_db_has_meta( $mainfile, $attachmentId )
 			|| wpmc_check_db_has_content( $mainfile ) )
 			return true;
-	
+
 		// If images, check the other files as well
 		$countfiles = 0;
 		$sizes = wpmc_get_image_sizes();
@@ -846,9 +851,9 @@ function wpmc_check_media( $attachmentId ) {
 					$file = wpmc_clean_uploaded_filename( $attr['file'] );
 					$countfiles++;
 					if ($wpmc_debug) error_log("checking MEDIA-IMAGE {$filepath}");
-					if ( wpmc_check_in_gallery( $filepath ) 
-						|| wpmc_check_db_has_background_or_header( $filepath ) 
-						|| wpmc_check_db_has_meta( $filepath, $attachmentId ) 
+					if ( wpmc_check_in_gallery( $filepath )
+						|| wpmc_check_db_has_background_or_header( $filepath )
+						|| wpmc_check_db_has_meta( $filepath, $attachmentId )
 						|| wpmc_check_db_has_content( $filepath ) )
 						return true;
 				}
@@ -857,17 +862,17 @@ function wpmc_check_media( $attachmentId ) {
 	} else {
 		$issue = 'ORPHAN_MEDIA';
 	}
-	
+
 	$table_name = $wpdb->prefix . "wpmcleaner";
-	$wpdb->insert( $table_name, 
-		array( 
+	$wpdb->insert( $table_name,
+		array(
 			'time' => current_time('mysql'),
 			'type' => 1,
 			'size' => $size,
 			'path' => $mainfile . ( $countfiles > 0 ? ( " (+ " . $countfiles . " files)" ) : "" ),
 			'postId' => $attachmentId,
 			'issue' => $issue
-			) 
+			)
 		);
 	return false;
 }
@@ -890,18 +895,24 @@ function wpmc_reset_issues( $includingIgnored = false ) {
  *
  */
 
+function wpmc_admin_inline_js() {
+	echo "<script type='text/javascript'>\n";
+	echo 'var wpmc_cfg = { isPro: ' . ( wpmc_is_pro()  ? '1' : '0') . ', scanFiles: ' . ( wpmc_getoption( 'scan_files', 'wpmc_basics', false ) ? '1' : '0' ) . ', scanMedia: ' . ( wpmc_getoption( 'scan_media', 'wpmc_basics', false ) ? '1' : '0' ) . ' };';
+	echo "\n</script>";
+}
+
 function echo_issue( $issue ) {
 	if ( $issue == 'NO_CONTENT' ) {
-		_e( "Not used.", 'wp-media-cleaner' );
+		_e( "Seems not in use.", 'wp-media-cleaner' );
 	}
 	else if ( $issue == 'NO_MEDIA' ) {
-		_e( "Media (DB entry) not found.", 'wp-media-cleaner' );
+		_e( "Not in Media Library.", 'wp-media-cleaner' );
 	}
 	else if ( $issue == 'ORPHAN_RETINA' ) {
-		_e( "Orphan retina.", 'wp-media-cleaner' );	
+		_e( "Orphan retina.", 'wp-media-cleaner' );
 	}
 	else if ( $issue == 'ORPHAN_MEDIA' ) {
-		_e( "File not found.", 'wp-media-cleaner' );	
+		_e( "File not found.", 'wp-media-cleaner' );
 	}
 	else {
 		echo $issue;
@@ -915,9 +926,9 @@ function wpmc_screen() {
 		<div id="icon-upload" class="icon32"><br></div>
 		<h2>WP Media Cleaner <?php by_jordy_meow(); ?></h2>
 
-		<?php 
+		<?php
 			global $wpdb;
-			$posts_per_page = 15; 
+			$posts_per_page = 15;
 			$view = isset ( $_GET[ 'view' ] ) ? sanitize_text_field( $_GET[ 'view' ] ) : "issues";
 			$paged = isset ( $_GET[ 'paged' ] ) ? sanitize_text_field( $_GET[ 'paged' ] ) : 1;
 			$reset = isset ( $_GET[ 'reset' ] ) ? $_GET[ 'reset' ] : 0;
@@ -934,25 +945,25 @@ function wpmc_screen() {
 
 			if ( $view == 'deleted' ) {
 				$items_count = $deleted_count;
-				$items = $wpdb->get_results( $wpdb->prepare( "SELECT id, type, postId, path, size, ignored, deleted, issue 
-					FROM $table_name WHERE ignored = 0 AND deleted = 1 AND path LIKE %s 
-					ORDER BY time 
+				$items = $wpdb->get_results( $wpdb->prepare( "SELECT id, type, postId, path, size, ignored, deleted, issue
+					FROM $table_name WHERE ignored = 0 AND deleted = 1 AND path LIKE %s
+					ORDER BY time
 					DESC LIMIT %d, %d", '%' . $s . '%', ( $paged - 1 ) * $posts_per_page, $posts_per_page ), OBJECT );
 			}
 			else if ( $view == 'ignored' ) {
 				$items_count = $ignored_count;
-				$items = $wpdb->get_results( $wpdb->prepare( "SELECT id, type, postId, path, size, ignored, deleted, issue 
-					FROM $table_name 
-					WHERE ignored = 1 AND deleted = 0 AND path LIKE %s 
-					ORDER BY time 
+				$items = $wpdb->get_results( $wpdb->prepare( "SELECT id, type, postId, path, size, ignored, deleted, issue
+					FROM $table_name
+					WHERE ignored = 1 AND deleted = 0 AND path LIKE %s
+					ORDER BY time
 					DESC LIMIT %d, %d", '%' . $s . '%', ( $paged - 1 ) * $posts_per_page, $posts_per_page ), OBJECT );
 			}
 			else {
 				$items_count = $issues_count;
-				$items = $wpdb->get_results( $wpdb->prepare( "SELECT id, type, postId, path, size, ignored, deleted, issue 
-					FROM $table_name 
+				$items = $wpdb->get_results( $wpdb->prepare( "SELECT id, type, postId, path, size, ignored, deleted, issue
+					FROM $table_name
 					WHERE ignored = 0 AND deleted = 0  AND path LIKE %s
-					ORDER BY time 
+					ORDER BY time
 					DESC LIMIT %d, %d", '%' . $s . '%', ( $paged - 1 ) * $posts_per_page, $posts_per_page ), OBJECT );
 			}
 		?>
@@ -978,21 +989,21 @@ function wpmc_screen() {
 				font-weight: bold;
 			}
 		</style>
-		
+
 		<div style='margin-top: 0px; background: #FFF; padding: 5px; border-radius: 4px; height: 28px; box-shadow: 0px 0px 6px #C2C2C2;'>
-			
+
 			<!-- SCAN -->
 			<?php if ( $view != 'deleted' ) { ?>
 				<a id='wpmc_scan' onclick='wpmc_scan()' class='button-primary' style='float: left;'><img style='position: relative; top: 3px; left: -2px; margin-right: 3px; width: 16px; height: 16px;' src='<?php echo trailingslashit( WP_PLUGIN_URL ) . trailingslashit( 'wp-media-cleaner/img'); ?>search.png' /><?php _e("Scan", 'wp-media-cleaner'); ?></a>
 			<?php } ?>
 
-			<!-- DELETE SELECTED -->		
+			<!-- DELETE SELECTED -->
 			<a id='wpmc_delete' onclick='wpmc_delete()' class='button' style='float: left; margin-left: 5px;'><img style='position: relative; top: 3px; left: -2px; margin-right: 3px; width: 16px; height: 16px;' src='<?php echo trailingslashit( WP_PLUGIN_URL ) . trailingslashit( 'wp-media-cleaner/img'); ?>delete.png' /><?php _e("Delete", 'wp-media-cleaner'); ?></a>
 			<?php if ( $view == 'deleted' ) { ?>
 				<a id='wpmc_recover' onclick='wpmc_recover()' class='button-secondary' style='float: left; margin-left: 5px;'><img style='position: relative; top: 3px; left: -2px; margin-right: 3px; width: 16px; height: 16px;' src='<?php echo trailingslashit( WP_PLUGIN_URL ) . trailingslashit( 'wp-media-cleaner/img'); ?>pills.png' /><?php _e("Recover", 'wp-media-cleaner'); ?></a>
 			<?php } ?>
 
-			<!-- IGNORE SELECTED -->		
+			<!-- IGNORE SELECTED -->
 			<a id='wpmc_ignore' onclick='wpmc_ignore()' class='button' style='float: left; margin-left: 5px;'><img style='position: relative; top: 3px; left: -2px; margin-right: 3px; width: 16px; height: 16px;' src='<?php echo trailingslashit( WP_PLUGIN_URL ) . trailingslashit( 'wp-media-cleaner/img'); ?>tick.png' /><?php _e("Ignore", 'wp-media-cleaner'); ?></a>
 
 			<!-- RESET -->
@@ -1003,7 +1014,7 @@ function wpmc_screen() {
 			<!-- DELETE ALL -->
 			<?php if ( $view == 'deleted' ) { ?>
 				<a id='wpmc_recover_all' onclick='wpmc_recover_all()' class='button-primary' style='float: right; margin-left: 5px;'><img style='position: relative; top: 3px; left: -2px; margin-right: 3px; width: 16px; height: 16px;' src='<?php echo trailingslashit( WP_PLUGIN_URL ) . trailingslashit( 'wp-media-cleaner/img'); ?>pills.png' /><?php _e("Recover all", 'wp-media-cleaner'); ?></a>
-				<a id='wpmc_delete_all' onclick='wpmc_delete_all(true)' class='button button-red' style='float: right; margin-left: 5px;'><img style='position: relative; top: 3px; left: -2px; margin-right: 3px; width: 16px; height: 16px;' src='<?php echo trailingslashit( WP_PLUGIN_URL ) . trailingslashit( 'wp-media-cleaner/img'); ?>trash.png' /><?php _e("Empty trash", 'wp-media-cleaner'); ?></a>				
+				<a id='wpmc_delete_all' onclick='wpmc_delete_all(true)' class='button button-red' style='float: right; margin-left: 5px;'><img style='position: relative; top: 3px; left: -2px; margin-right: 3px; width: 16px; height: 16px;' src='<?php echo trailingslashit( WP_PLUGIN_URL ) . trailingslashit( 'wp-media-cleaner/img'); ?>trash.png' /><?php _e("Empty trash", 'wp-media-cleaner'); ?></a>
 			<?php } else { ?>
 				<a id='wpmc_delete_all' onclick='wpmc_delete_all()' class='button button-red' style='float: right; margin-left: 5px;'><img style='position: relative; top: 3px; left: -2px; margin-right: 3px; width: 16px; height: 16px;' src='<?php echo trailingslashit( WP_PLUGIN_URL ) . trailingslashit( 'wp-media-cleaner/img'); ?>delete.png' /><?php _e("Delete all", 'wp-media-cleaner'); ?></a>
 			<?php } ?>
@@ -1019,24 +1030,30 @@ function wpmc_screen() {
 			</form>
 
 			<!-- PROGRESS -->
-			<span style='margin-left: 12px; font-size: 15px; top: 5px; position: relative; color: #747474;' id='wpmc_progression'></span>	
+			<span style='margin-left: 12px; font-size: 15px; top: 5px; position: relative; color: #747474;' id='wpmc_progression'></span>
 
 		</div>
 
 		<p>
 			<?php
-				$scan_files = wpmc_getoption( 'scan_files', 'wpmc_basics', true );
-				$scan_media = wpmc_getoption( 'scan_media', 'wpmc_basics', true );
+				$scan_files = wpmc_getoption( 'scan_files', 'wpmc_basics', false );
+				$scan_media = wpmc_getoption( 'scan_media', 'wpmc_basics', false );
 
 				echo "<p>";
-				echo "Deleted files will be moved to the 'uploads/wpmc-trash' directory. Please backup your database and files.";
+				_e( "<b>Backup your database and files before delete! This is important.</b> The files deleted by the plugin will be moved to the 'uploads/wpmc-trash' directory and you can trash them later. I am trying my best to make this plugin safe but since it deletes files on a very dynamic system (= WordPress), it is impossible to predict every single situation. Be careful.", 'wp-media-cleaner' );
+				if ( $scan_media )
+					_e( " If you delete an item of the type MEDIA, the database entry for it (Media Library) will be deleted permanently.", 'wp-media-cleaner' );
+				echo "</p>";
+
 				if ( !$scan_files && !$scan_media ) {
-					echo "<span style='color: red;'>";
-					_e( " Scan is not enabled for either the files or the medias. Please check Settings > WP Media Cleaner.", 'wp-media-cleaner' ); 
-					echo "</span>";
+					echo "<div class=\"error\"><p>";
+					_e( "Scan is not enabled for neither the files or for the medias. The plugin is basically disabled.<br /><b>Please check Settings > Media Cleaner</b>.", 'wp-media-cleaner' );
+					echo "</p></div>";
 				}
-				if ( $scan_media ) {
-					_e( " If you delete an item of the type MEDIA, the database entry for it (Media Library) will be deleted permanently.", 'wp-media-cleaner' ); 
+				else if ( !wpmc_is_pro() ) {
+					echo "<div class=\"updated\"><p>";
+					_e( "<b>This version is not Pro.</b> It will only let you delete the files <u><b>one by one</b></u>, for your safety. <b>If the plugin works perfectly for deleting the files one by one then you can <a href='http://apps.meow.fr/wp-media-cleaner'>get the PRO version</a></b>. It will let you delete all the files in one click.", 'wp-media-cleaner' );
+					echo "</p></div>";
 				}
 			?>
 			There are <b><?php echo $issues_count ?> issue(s)</b> with your files, accounting for <b><?php echo number_format( $total_size / 1000000, 2 )  ?> MB</b>. Your trash contains <b><?php echo number_format( $trash_total_size / 1000000, 2 )  ?> MB.</b>
@@ -1044,7 +1061,7 @@ function wpmc_screen() {
 
 		<div id='wpmc-pages'>
 		<?php
-		echo paginate_links(array(  
+		echo paginate_links(array(
 			'base' => '?page=wp-media-cleaner&s=' . urlencode($s) . '&view=' . $view . '%_%',
 			'current' => $paged,
 			'format' => '&paged=%#%',
@@ -1064,8 +1081,10 @@ function wpmc_screen() {
 
 			<thead>
 				<tr>
-					<th scope="col" id="cb" class="manage-column column-cb check-column"><input id="wpmc-cb-select-all" type="checkbox"></th>
+					<th scope="col" id="cb" class="manage-column column-cb check-column"><input id="wpmc-cb-select-all" type="checkbox" <?php _e( wpmc_is_pro() ? '' : 'disabled' ) ?>></th>
+					<?php if ( !wpmc_getoption( 'hide_thumbnails', 'wpmc_basics', false ) ): ?>
 					<th style='width: 64px;'>Thumb</th>
+					<?php endif; ?>
 					<th style='width: 50px;'>Type</th>
 					<th style='width: 80px;'>Origin</th>
 					<th>Path</th>
@@ -1078,13 +1097,14 @@ function wpmc_screen() {
 				<?php foreach ( $items as $issue ) { ?>
 				<tr>
 					<td><input type="checkbox" name="id" value="<?php echo $issue->id ?>"></td>
+					<?php if ( !wpmc_getoption( 'hide_thumbnails', 'wpmc_basics', false ) ): ?>
 					<td>
 						<?php
 							if ( $issue->deleted == 0 ) {
 								if ( $issue->type == 0 ) {
 									// FILE
 									$upload_dir = wp_upload_dir();
-									echo "<img style='max-width: 48px; max-height: 48px;' src='" . htmlspecialchars( $upload_dir['baseurl'] . '/' . $issue->path, ENT_QUOTES ) . "' />";			
+									echo "<img style='max-width: 48px; max-height: 48px;' src='" . htmlspecialchars( $upload_dir['baseurl'] . '/' . $issue->path, ENT_QUOTES ) . "' />";
 								}
 								else {
 									// MEDIA
@@ -1094,6 +1114,7 @@ function wpmc_screen() {
 							}
 						?>
 					</td>
+					<?php endif; ?>
 					<td><?php echo $issue->type == 0 ? 'FILE' : 'MEDIA'; ?></td>
 					<td><?php echo $issue->type == 0 ? 'Filesystem' : ("<a href='media.php?attachment_id=" . $issue->postId . "&action=edit'>ID " . $issue->postId . "</a>"); ?></td>
 					<td><?php echo stripslashes( $issue->path ); ?></td>
@@ -1104,7 +1125,11 @@ function wpmc_screen() {
 			</tbody>
 
 			<tfoot>
-				<tr><th></th><th></th><th>Type</th><th>Origin</th><th>Path</th><th>Issue</th><th style='width: 80px; text-align: right;'>Size</th></tr>
+				<tr><th></th>
+				<?php if ( !wpmc_getoption( 'hide_thumbnails', 'wpmc_basics', false ) ): ?>
+				<th></th>
+				<?php endif; ?>
+				<th>Type</th><th>Origin</th><th>Path</th><th>Issue</th><th style='width: 80px; text-align: right;'>Size</th></tr>
 			</tfoot>
 
 		</table>
@@ -1116,14 +1141,83 @@ function wpmc_screen() {
 
 /**
  *
+ * PRO
+ * Come on, it's not so expensive :'(
+ *
+ */
+
+function wpmc_is_pro() {
+	$validated = get_transient( 'wpmc_validated' );
+	if ( $validated ) {
+		$serial = get_option( 'wpmc_pro_serial');
+		return !empty( $serial );
+	}
+	$subscr_id = get_option( 'wpmc_pro_serial', "" );
+	if ( !empty( $subscr_id ) )
+		return wpmc_validate_pro( wpmc_getoption( "subscr_id", "wpmc_pro", array() ) );
+	return false;
+}
+
+function wpmc_validate_pro( $subscr_id ) {
+	if ( empty( $subscr_id ) ) {
+		delete_option( 'wpmc_pro_serial', "" );
+		delete_option( 'wpmc_pro_status', "" );
+		set_transient( 'wpmc_validated', false, 0 );
+		return false;
+	}
+	require_once ABSPATH . WPINC . '/class-IXR.php';
+	require_once ABSPATH . WPINC . '/class-wp-http-ixr-client.php';
+	$client = new WP_HTTP_IXR_Client( 'http://apps.meow.fr/xmlrpc.php' );
+	$client->useragent = 'MeowApps';
+	if ( !$client->query( 'meow_sales.auth', $subscr_id, 'media-cleaner', get_site_url() ) ) {
+		update_option( 'wpmc_pro_serial', "" );
+		update_option( 'wpmc_pro_status', "A network error: " . $client->getErrorMessage() );
+		set_transient( 'wpmc_validated', false, 0 );
+		return false;
+	}
+	$post = $client->getResponse();
+	if ( !$post['success'] ) {
+		if ( $post['message_code'] == "NO_SUBSCRIPTION" ) {
+			$status = __( "Your serial does not seem right." );
+		}
+		else if ( $post['message_code'] == "NOT_ACTIVE" ) {
+			$status = __( "Your subscription is not active." );
+		}
+		else if ( $post['message_code'] == "TOO_MANY_URLS" ) {
+			$status = __( "Too many URLs are linked to your subscription." );
+		}
+		else {
+			$status = "There is a problem with your subscription.";
+		}
+		update_option( 'wpmc_pro_serial', "" );
+		update_option( 'wpmc_pro_status', $status );
+		set_transient( 'wpmc_validated', false, 0 );
+		return false;
+	}
+	set_transient( 'wpmc_validated', $subscr_id, 3600 * 24 * 100 );
+	update_option( 'wpmc_pro_serial', $subscr_id );
+	update_option( 'wpmc_pro_status', __( "Your subscription is enabled." ) );
+	return true;
+}
+
+/**
+ *
  * PLUGIN INSTALL / UNINSTALL / SCRIPTS
  *
  */
 
+function wpmc_check_db() {
+	global $wpdb;
+	$tbl_m = $wpdb->prefix . 'wpmcleaner';
+	if ( !$wpdb->get_var( $wpdb->prepare( "SELECT COUNT(1) FROM information_schema.tables WHERE table_schema = '%s' AND table_name = '%s';", $wpdb->dbname, $tbl_m ) ) ) {
+		wpmc_activate();
+	}
+}
+
 function wpmc_admin_menu() {
 	load_plugin_textdomain( 'wp-media-cleaner', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
-	add_media_page( 'WP Media Cleaner', 'Media Cleaner', 'manage_options', 'wp-media-cleaner', 'wpmc_screen' );
-	add_options_page( 'WP Media Cleaner', 'WP Media Cleaner', 'manage_options', 'wpmc_settings', 'wpmc_settings_page' );
+	add_media_page( 'Media Cleaner', 'Media Cleaner', 'manage_options', 'wp-media-cleaner', 'wpmc_screen' );
+	add_options_page( 'Media Cleaner', 'Media Cleaner', 'manage_options', 'wpmc_settings', 'wpmc_settings_page' );
 }
 
 function wpmc_reset () {
@@ -1133,7 +1227,7 @@ function wpmc_reset () {
 
 function wpmc_activate () {
 	global $wpdb;
-	$table_name = $wpdb->prefix . "wpmcleaner"; 
+	$table_name = $wpdb->prefix . "wpmcleaner";
 	$sql = "CREATE TABLE $table_name (
 		id BIGINT(20) NOT NULL AUTO_INCREMENT,
 		time DATETIME DEFAULT '0000-00-00 00:00:00' NOT NULL,
@@ -1154,12 +1248,11 @@ function wpmc_activate () {
 	if ( !is_writable( $basedir ) ) {
 		echo '<div class="error"><p>' . __( 'The directory for uploads is not writable. WP Media Cleaner will only be able to scan.', 'wp-media-cleaner' ) . '</p></div>';
 	}
-
 }
 
 function wpmc_uninstall () {
 	global $wpdb;
-	$table_name = $wpdb->prefix . "wpmcleaner"; 
+	$table_name = $wpdb->prefix . "wpmcleaner";
 	$wpdb->query("DROP TABLE IF EXISTS $table_name");
 }
 

@@ -90,6 +90,10 @@ function wpmc_delete() {
 function wpmc_delete_all(isTrash) {
 	var items = [];
 	var data = { action: 'wpmc_get_all_issues', isTrash: isTrash ? 1 : 0 };
+	if (!isTrash && !wpmc_cfg.isPro) {
+		alert("You need the Pro version to delete all the files at once.");
+		return;
+	}
 	jQuery.post(ajaxurl, data, function (response) {
 		reply = jQuery.parseJSON(response);
 		if ( !reply.success ) {
@@ -150,35 +154,89 @@ function wpmc_ignore_do(items, totalcount) {
  *
  */
 
-function wpmc_scan() {
-	var data = { action: 'wpmc_scan', library: true, upload: true };
-	jQuery('#wpmc_progression').text("Please wait...");
+var wpmc = {
+	dirs: [],
+	files: [],
+	medias: [],
+	total: 0,
+	issues: 0
+};
+
+function wpmc_scan_type(type, path) {
+	var data = { action: 'wpmc_scan', medias: type === 'medias', uploads: type === 'uploads', path: path };
+	if (path) {
+		elpath = path.replace(/^.*[\\\/]/, '');
+		jQuery('#wpmc_progression').text("Read files (" + elpath + ")...");
+	}
+	else if (type === 'medias')
+		jQuery('#wpmc_progression').text("Read medias...");
+	else
+		jQuery('#wpmc_progression').text("Read files...");
+
 	jQuery.post(ajaxurl, data, function (response) {
 		reply = jQuery.parseJSON(response);
 		if ( !reply.success ) {
 			alert( reply.message );
 			return;
 		}
-		wpmc_scan_do(reply.results.files, reply.results.medias, reply.results.files.length + reply.results.medias.length, 0);
+
+		// Store results
+		for (var i = 0, len = reply.results.length; i < len; i++) {
+		  var r = reply.results[i];
+			if (type === 'uploads') {
+				if ( r.type === 'dir' )
+					wpmc.dirs.push( r.path );
+				else if ( r.type === 'file' ) {
+					wpmc.files.push( r.path );
+					wpmc.total++;
+				}
+			}
+			else if (type === 'medias')
+				wpmc.medias.push( r );
+			wpmc.total++;
+		}
+
+		// Next query
+		if (type === 'medias') {
+			if (wpmc_cfg.scanFiles)
+				return wpmc_scan_type('uploads', null);
+			else
+				return wpmc_scan_do();
+		}
+		else if (type === 'uploads') {
+			var dir = wpmc.dirs.pop();
+			if (dir)
+				return wpmc_scan_type('uploads', dir);
+			else
+				return wpmc_scan_do();
+		}
 	});
 }
 
-function wpmc_scan_do(files, medias, totalcount, totalissues) {
-	wpmc_update_progress((totalcount - (files.length + medias.length)), totalcount);
+function wpmc_scan() {
+	wpmc = { dirs: [], files: [], medias: [], total: 0, issues: 0 };
+	if (wpmc_cfg.scanMedia)
+		wpmc_scan_type('medias', null);
+	else if (wpmc_cfg.scanFiles)
+		wpmc_scan_type('uploads', null);
+}
+
+function wpmc_scan_do() {
+	wpmc_update_progress(wpmc.total - (wpmc.files.length + wpmc.medias.length), wpmc.total);
 	var data = {};
 	var expectedSuccess = 0;
-	if (files.length > 0) {
-		newFiles = wpmc_pop_array(files, 5);
+	if (wpmc.files.length > 0) {
+		newFiles = wpmc_pop_array(wpmc.files, 5);
 		expectedSuccess = newFiles.length;
 		data = { action: 'wpmc_scan_do', type: 'file', data: newFiles };
 	}
-	else if (medias.length > 0) {
-		newMedias = wpmc_pop_array(medias, 5);
+	else if (wpmc.medias.length > 0) {
+		newMedias = wpmc_pop_array(wpmc.medias, 5);
 		expectedSuccess = newMedias.length;
 		data = { action: 'wpmc_scan_do', type: 'media', data: newMedias };
 	}
 	else {
-		jQuery('#wpmc_progression').html(totalissues + " issue(s) found. <a href='?page=wp-media-cleaner'>Refresh</a>.");
+		jQuery('#wpmc_progression').html(wpmc.issues + " issue(s) found. <a href='?page=wp-media-cleaner'>Refresh</a>.");
 		return;
 	}
 	jQuery.post(ajaxurl, data, function (response) {
@@ -187,8 +245,8 @@ function wpmc_scan_do(files, medias, totalcount, totalissues) {
 			alert( reply.message );
 			return;
 		}
-		totalissues += expectedSuccess - reply.result.success;
-		wpmc_scan_do(files, medias, totalcount, totalissues);
+		wpmc.issues += expectedSuccess - reply.result.success;
+		wpmc_scan_do();
 	});
 }
 
@@ -197,6 +255,14 @@ function wpmc_scan_do(files, medias, totalcount, totalissues) {
  * INIT
  *
  */
+
+jQuery('#wpmc-table input').change(function () {
+	if (wpmc_cfg.isPro)
+		return;
+	jQuery('#wpmc-table input:checked').attr('checked', false);
+	jQuery(this).attr('checked', true);
+	return;
+});
 
 jQuery('#wpmc-cb-select-all').on('change', function (cb) {
 	jQuery('#wpmc-table input').prop('checked', cb.target.checked);
