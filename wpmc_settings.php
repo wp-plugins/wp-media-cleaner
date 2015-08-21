@@ -9,16 +9,16 @@ add_action( 'admin_init', 'wpmc_admin_init' );
  */
 
 function wpmc_settings_page() {
-    global $wpmc_settings_api;
+  global $wpmc_settings_api;
 	echo '<div class="wrap">';
-    jordy_meow_donation();
+  jordy_meow_donation();
 	echo "<div id='icon-options-general' class='icon32'><br></div><h2>WP Media Cleaner";
-    by_jordy_meow();
-    echo "</h2>";
-    $wpmc_settings_api->show_navigation();
-    $wpmc_settings_api->show_forms();
-    echo '</div>';
-	jordy_meow_footer();
+  by_jordy_meow();
+  echo "</h2>";
+  $wpmc_settings_api->show_navigation();
+  $wpmc_settings_api->show_forms();
+  jordy_meow_footer();
+  echo '</div>';
 }
 
 function wpmc_getoption( $option, $section, $default = '' ) {
@@ -45,14 +45,21 @@ function wpmc_admin_init() {
 	$sections = array(
         array(
             'id' => 'wpmc_basics',
-            'title' => __( 'Basics', 'wp-media-cleaner' )
+            'title' => __( 'Options', 'wp-media-cleaner' )
         ),
         array(
             'id' => 'wpmc_pro',
-            'title' => __( 'Pro', 'wp-media-cleaner' )
+            'title' => __( 'Serial Key (Pro)', 'wp-media-cleaner' )
         )
     );
 
+    global $shortcode_tags;
+    $allshortcodes = array_diff( $shortcode_tags, array(  ) );
+    $my_shortcodes = array();
+    foreach ( $allshortcodes as $sc )
+      if ( $sc != '__return_false' )
+        array_push( $my_shortcodes, str_replace( '_shortcode', '', $sc ) );
+    $my_shortcodes = implode( ', ', $my_shortcodes );
     $fields = array(
         'wpmc_basics' => array(
             array(
@@ -66,6 +73,13 @@ function wpmc_admin_init() {
                 'name' => 'scan_files',
                 'label' => __( 'Scan Files', 'wp-media-cleaner' ),
                 'desc' => __( 'The Uploads folder will be scanned.<br /><small>The files in your /uploads folder that don\'t seem being used in your WordPress will be marked as to be deleted. <b>If they are found in your Media Library, they will be considered as fine.</b></small>', 'wp-media-cleaner' ),
+                'type' => 'checkbox',
+                'default' => false
+            ),
+            array(
+                'name' => 'shortcode',
+                'label' => __( 'Resolve Shortcode', 'wp-media-cleaner' ),
+                'desc' => sprintf( __( 'The shortcodes you are using in your posts and widgets will be resolved and checked.<br /><small>This process takes more resources. If the scanning suddenly stops, this might be the cause. Here is the list of the shortcodes enabled on your WordPress that you might be using: <b>%s</b>. Please note that the gallery shortcode is checked by the normal process. You don\'t need to have this option enabled for the WP gallery.</small>', 'wp-media-cleaner' ), $my_shortcodes ),
                 'type' => 'checkbox',
                 'default' => false
             ),
@@ -88,7 +102,7 @@ function wpmc_admin_init() {
             array(
                 'name' => 'pro',
                 'label' => '',
-                'desc' => __( sprintf( 'Status: %s<br /><br />', $pro_status ), 'wp-media-cleaner' ),
+                'desc' => sprintf( __( "Status: %s", 'wp-media-cleaner' ), $pro_status ),
                 'type' => 'html'
             ),
             array(

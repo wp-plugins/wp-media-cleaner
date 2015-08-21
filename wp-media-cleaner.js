@@ -105,7 +105,7 @@ function wpmc_delete_all(isTrash) {
 }
 
 function wpmc_update_progress(current, totalcount) {
-	jQuery('#wpmc_progression').text(current + "/" + totalcount + " (" + Math.round(current / totalcount * 100) + "%)");
+	jQuery('#wpmc_progression').html('<span class="dashicons dashicons-controls-play"></span> ' + current + "/" + totalcount + " (" + Math.round(current / totalcount * 100) + "%)");
 }
 
 function wpmc_delete_do(items, totalcount) {
@@ -166,12 +166,12 @@ function wpmc_scan_type(type, path) {
 	var data = { action: 'wpmc_scan', medias: type === 'medias', uploads: type === 'uploads', path: path };
 	if (path) {
 		elpath = path.replace(/^.*[\\\/]/, '');
-		jQuery('#wpmc_progression').text("Read files (" + elpath + ")...");
+		jQuery('#wpmc_progression').html('<span class="dashicons dashicons-portfolio"></span> Read files (' + elpath + ')...');
 	}
 	else if (type === 'medias')
-		jQuery('#wpmc_progression').text("Read medias...");
+		jQuery('#wpmc_progression').html('<span class="dashicons dashicons-admin-media"></span> Read medias...');
 	else
-		jQuery('#wpmc_progression').text("Read files...");
+		jQuery('#wpmc_progression').html('<span class="dashicons dashicons-portfolio"></span> Read files...');
 
 	jQuery.post(ajaxurl, data, function (response) {
 		reply = jQuery.parseJSON(response);
@@ -236,7 +236,7 @@ function wpmc_scan_do() {
 		data = { action: 'wpmc_scan_do', type: 'media', data: newMedias };
 	}
 	else {
-		jQuery('#wpmc_progression').html(wpmc.issues + " issue(s) found. <a href='?page=wp-media-cleaner'>Refresh</a>.");
+		jQuery('#wpmc_progression').html(wpmc.issues + " issue(s) found. <a href='?page=wp-media-cleaner'></span>Refresh</a>.");
 		return;
 	}
 	jQuery.post(ajaxurl, data, function (response) {

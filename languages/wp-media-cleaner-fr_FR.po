@@ -1,133 +1,408 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: WP Category Switcher\n"
-"POT-Creation-Date: 2013-03-13 10:23+0900\n"
-"PO-Revision-Date: 2013-03-13 10:26+0900\n"
-"Last-Translator: Jordy Meow <work@meow.fr>\n"
-"Language-Team: Meow.fr <work@meow.fr>\n"
-"Language: English\n"
+"Project-Id-Version: WP Media Cleaner\n"
+"POT-Creation-Date: 2015-08-21 08:50+0200\n"
+"PO-Revision-Date: 2015-08-21 09:15+0200\n"
+"Last-Translator: Jordy Meow <jordy@meow.fr>\n"
+"Language-Team: Meow.fr <apps@meow.fr>\n"
+"Language: fr_FR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 1.5.5\n"
+"X-Generator: Poedit 1.8.4\n"
 "X-Poedit-KeywordsList: _e;__\n"
-"X-Poedit-Basepath: ../\n"
+"X-Poedit-Basepath: ..\n"
 "X-Poedit-SourceCharset: UTF-8\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "X-Poedit-SearchPath-0: .\n"
 
-#: wp-media-cleaner.php:52 wp-media-cleaner.php:70
+#: meow_footer.php:22
+msgid ""
+"Developed by <a style=\"text-decoration: none;\" href=\"http://www.meow.fr\" "
+"target=\"_blank\">Jordy Meow</a>"
+msgstr ""
+"Développé par <a style=\"text-decoration: none;\" href=\"http://www.meow.fr"
+"\">Jordy Meow</a>."
+
+#: meow_footer.php:34
+msgid ""
+"I love and strongly recommend WP Engine. My plugins are all tested with it."
+msgstr "J'utilise WP Engine pour tester mes plugins et je le recommande."
+
+#: meow_footer.php:45
+msgid ""
+"<b>This plugin is actively developed and maintained by <a href=\"http://www."
+"meow.fr\">Jordy Meow</a></b>.<br />More of my tools are available here: <a "
+"href=\"http://apps.meow.fr\">Meow Apps</a>. I am also a photographer in "
+"Japan: <a href=\"http://www.totorotimes.com\">Totoro Times</a>."
+msgstr ""
+"<strong>Le plugin est développé et maintenu par <a href=\"http://www.meow.fr"
+"\">Jordy Meow</a></strong>.<br />Mes outils et mes plugins sont disponibles "
+"dans les pages de mon site <a href=\"http://apps.meow.fr\">Meow Apps</a>. </"
+"br />Je suis également photographe au Japon et mes travaux sont disponibles "
+"sur mon autre site : <a href=\"http://www.totorotimes.fr\">Totoro Times</a>."
+
+#: meow_footer.php:48
+#, php-format
+msgid "Donation link: %sPaypal%s. Thanks! ^^"
+msgstr ""
+"Don Paypal : %sPaypal%s. Merci de soutenir l'auteur du plugin WP Media "
+"Cleaner."
+
+#: wp-media-cleaner.php:59 wp-media-cleaner.php:77 wp-media-cleaner.php:95
 msgid "Status unknown."
-msgstr "Statut inconnu."
+msgstr "Statut inconnu"
 
-#: wp-media-cleaner.php:92
+#: wp-media-cleaner.php:122
 msgid "Items checked."
-msgstr "Fichiers vérifiés."
+msgstr "Fichiers vérifiés"
 
-#: wp-media-cleaner.php:106 wp-media-cleaner.php:124
+#: wp-media-cleaner.php:136 wp-media-cleaner.php:154
 msgid "List generated."
-msgstr "Liste générée."
+msgstr "Liste générée"
 
-#: wp-media-cleaner.php:150
-msgid "Lists generated."
-msgstr "Listes générées."
+#: wp-media-cleaner.php:266
+msgid "Files retrieved."
+msgstr "Fichiers récupérés"
 
-#: wp-media-cleaner.php:417
-msgid "Related content not found."
-msgstr "Introuvable en DB."
+#: wp-media-cleaner.php:276
+msgid "Medias retrieved."
+msgstr "Images récupérées"
 
-#: wp-media-cleaner.php:420
-msgid "Related content or media not found."
-msgstr "Pas de media associé, ni contenu."
+#: wp-media-cleaner.php:282
+msgid "No task."
+msgstr "Aucune opération"
 
-#: wp-media-cleaner.php:423
-msgid "Orphan retina file."
-msgstr "Retina orphelin."
+#: wp-media-cleaner.php:910
+msgid "Seems not in use."
+msgstr "Ne semble pas en cours d'utilisation"
 
-#: wp-media-cleaner.php:443
-msgid ""
-"Scan is not enabled for either the files or the medias. Please check "
-"Settings > WP Media Cleaner."
-msgstr ""
-"Le scan n'est pas activé ni pour les fichier ni pour les médias. Vérifiez "
-"les paramètres de WP Media Cleaner."
+#: wp-media-cleaner.php:913
+msgid "Not in Media Library."
+msgstr "Pas dans la bibliothèque multimédia"
 
-#: wp-media-cleaner.php:446
-msgid ""
-"Be aware that a media will be considered <b>NOT</b> an issue <b>ONLY IF</b> "
-"it is found in the Posts or Pages, and not in a Gallery. The deletion of a "
-"media is also <b>PERMANENT</b>."
-msgstr ""
-"Attention, un media ne sera pas considéré comme un problème <b>seulement "
-"dans le cas où</b> il est présent dans les Posts ou les Pages, mais pas dans "
-"les Galleries ! La suppression des médias est aussi <b>irrémédiable</b>."
+#: wp-media-cleaner.php:916
+msgid "Orphan retina."
+msgstr "Retina orphelin"
 
-#: wp-media-cleaner.php:520
+#: wp-media-cleaner.php:919
+msgid "File not found."
+msgstr "Fichier introuvable"
+
+#: wp-media-cleaner.php:1000
 msgid "Scan"
 msgstr "Scanner"
 
-#: wp-media-cleaner.php:523
+#: wp-media-cleaner.php:1004
 msgid "Delete"
 msgstr "Supprimer"
 
-#: wp-media-cleaner.php:525
+#: wp-media-cleaner.php:1006
 msgid "Recover"
 msgstr "Récupérer"
 
-#: wp-media-cleaner.php:529
+#: wp-media-cleaner.php:1010
+msgid "Ignore"
+msgstr "Ignorer"
+
+#: wp-media-cleaner.php:1014
 msgid "Reset"
 msgstr "Reset"
 
-#: wp-media-cleaner.php:533
+#: wp-media-cleaner.php:1019
 msgid "Recover all"
 msgstr "Tout récupérer"
 
-#: wp-media-cleaner.php:534
+#: wp-media-cleaner.php:1020
 msgid "Empty trash"
 msgstr "Vider la corbeille"
 
-#: wp-media-cleaner.php:536
+#: wp-media-cleaner.php:1022
 msgid "Delete all"
 msgstr "Tout supprimer"
 
-#: wp-media-cleaner.php:569
+#: wp-media-cleaner.php:1031
+msgid "Search"
+msgstr "Chercher"
+
+#: wp-media-cleaner.php:1046
+msgid ""
+"<b>Backup your database and files before delete! This is important.</b> The "
+"files deleted by the plugin will be moved to the 'uploads/wpmc-trash' "
+"directory and you can trash them later. I am trying my best to make this "
+"plugin safe but since it deletes files on a very dynamic system (= "
+"WordPress), it is impossible to predict every single situation. Be careful."
+msgstr ""
+"<p style=\"text-align: justify;\"><strong>Note importante </strong>: Avant "
+"de lancer la scan, je vous remercie de <strong>sauvegarder vos fichiers et "
+"votre base de données</strong> parce que les éléments supprimés par le "
+"plugin WP Media Cleaner seront déplacés dans le répertoire \"uploads/wpmc-"
+"trash\" de votre client FTP.</p>"
+
+#: wp-media-cleaner.php:1048
+msgid ""
+" If you delete an item of the type MEDIA, the database entry for it (Media "
+"Library) will be deleted permanently."
+msgstr ""
+"<p style=\"text-align: justify;\">Si vous supprimez un média de votre "
+"bibliothèque WordPress à l'issue d'un scan, le plugin WP Media Cleaner le "
+"supprimera de celle-ci.</p>"
+
+#: wp-media-cleaner.php:1053
+msgid ""
+"Scan is not enabled for neither the files or for the medias. The plugin is "
+"basically disabled. <b>Please check Settings > Media Cleaner</b>."
+msgstr ""
+"<p style=\"text-align: justify;\">Vous ne pouvez pas utiliser WP Media "
+"Cleaner, et scanner vos fichiers et vos médias tant que vous n'aurez pas "
+"<strong>vérifier les paramètres</strong> (Réglages > Media Cleaner)</"
+"strong>. Il faut ainsi que vous cochiez le scan de la bibliothèque et/ou le "
+"scan des fichiers pour que l'extension fonctionne.</p>"
+
+#: wp-media-cleaner.php:1058
+msgid ""
+"<b>This version is not Pro.</b> It will only let you delete the files "
+"<u><b>one by one</b></u>, for your safety. <b>If the plugin works perfectly "
+"for deleting the files one by one then you can <a href='http://apps.meow.fr/"
+"wp-media-cleaner'>get the PRO version</a></b>. It will let you delete all "
+"the files in one click."
+msgstr ""
+"<p style=\"text-align: justify;\">Vous utilisez la version gratuite de WP "
+"Media Cleaner qui vous autorise à scanner votre bibliothèque de médias et à "
+"supprimer les fichiers un par un.</p>\n"
+"<p style=\"text-align: justify;\"> Une version payante de WP Media Cleaner "
+"est disponible sur <a href='http://apps.meow.fr/wp-media-cleaner'>le site de "
+"son auteur</a> afin que vous l'utilisiez avec toutes ses fonctionnalités "
+"(suppression de tous les fichiers).</p>"
+
+#: wp-media-cleaner.php:1062
+#, php-format
+msgid ""
+"There are <b>%d issue(s)</b> with your files, accounting for <b>%d MB</b>. "
+"Your trash contains <b>%d MB.</b>"
+msgstr ""
+"Il y a <strong>%d fichier(s) inutilisé(s)</strong> qui représente un total "
+"de <strong>%d MB</strong>. Votre corbeille contient <strong>%d MB</strong>."
+
+#: wp-media-cleaner.php:1079
 msgid "Issues"
-msgstr "Problèmes"
+msgstr "Fichiers inutilisés"
 
-#: wp-media-cleaner.php:570
+#: wp-media-cleaner.php:1080
 msgid "Ignored"
-msgstr "Ignoré"
+msgstr "Fichiers ignorés"
 
-#: wp-media-cleaner.php:571
+#: wp-media-cleaner.php:1081
 msgid "Trash"
 msgstr "Corbeille"
 
-#: wp-media-cleaner.php:649
+#: wp-media-cleaner.php:1090
+msgid "Thumb"
+msgstr "Aperçu"
+
+#: wp-media-cleaner.php:1092 wp-media-cleaner.php:1136
+msgid "Type"
+msgstr "Type"
+
+#: wp-media-cleaner.php:1093 wp-media-cleaner.php:1136
+msgid "Origin"
+msgstr "Origine"
+
+#: wp-media-cleaner.php:1094 wp-media-cleaner.php:1136
+msgid "Path"
+msgstr "Fichier"
+
+#: wp-media-cleaner.php:1095 wp-media-cleaner.php:1136
+msgid "Issue"
+msgstr "Problème"
+
+#: wp-media-cleaner.php:1096 wp-media-cleaner.php:1136
+msgid "Size"
+msgstr "Taille"
+
+#: wp-media-cleaner.php:1185
+msgid "Your serial does not seem right."
+msgstr "Votre numéro de série ne semble pas être correct."
+
+#: wp-media-cleaner.php:1188
+msgid "Your subscription is not active."
+msgstr "Votre abonnement n'est pas actif."
+
+#: wp-media-cleaner.php:1191
+msgid "Too many URLs are linked to your subscription."
+msgstr "Il y a trop d'adresse URL qui sont liées à votre abonnement."
+
+#: wp-media-cleaner.php:1194
+msgid "There is a problem with your subscription."
+msgstr "Il y a un problème avec votre abonnement."
+
+#: wp-media-cleaner.php:1203
+msgid "Your subscription is enabled."
+msgstr "Votre abonnement est actif."
+
+#: wp-media-cleaner.php:1253
 msgid ""
 "The directory for uploads is not writable. WP Media Cleaner will only be "
 "able to scan."
 msgstr ""
-"Le répertoire pour les uploads n'est pas accessible en écriture. WP Media "
-"Cleaner ne pourra en faire seulement que le scan."
+"Le répertoire pour les téléchargements (/uploads) n'est pas accessible en "
+"écriture. WP Media Cleaner ne pourra seulement que scanner vos fichiers. "
+"Pour résoudre le problème, merci de contacter votre hébergeur Internet."
 
-#: wpmc_settings.php:37
-msgid "Basics"
-msgstr "Base"
-
-#: wpmc_settings.php:45
-msgid "Scan Media"
-msgstr "Scan Medias"
-
-#: wpmc_settings.php:46
-msgid "The Media Library will be scanned."
-msgstr "La Bibliothèque sera scannée."
+#: wpmc_settings.php:48
+msgid "Options"
+msgstr "Options"
 
 #: wpmc_settings.php:52
-msgid "Scan Files"
-msgstr "Scan Uploads"
+msgid "Serial Key (Pro)"
+msgstr "Numéro de série (Pro)"
 
-#: wpmc_settings.php:53
-msgid "The Uploads folder will be scanned."
-msgstr "Les fichiers uploadés seront scannés."
+#: wpmc_settings.php:67
+msgid "Scan Media"
+msgstr "Scan de la bibliothèque"
+
+#: wpmc_settings.php:68
+msgid ""
+"The Media Library will be scanned.<br /><small>The medias from Media Library "
+"which seem not being used in your WordPress will be marked as to be deleted."
+"</small>"
+msgstr ""
+"<p style=\"text-align: justify;\">La bibliothèque de médias sera scannée.</"
+"p>\n"
+"<p style=\"text-align: justify;\"><small>Les fichiers situés dans votre "
+"bibliothèque de médias qui seront inutilisés par vos billets, seront listés "
+"dans l'onglet \"Fichiers inutilisés\" (Médias > Media Cleaner)</small>.</p>"
+
+#: wpmc_settings.php:74
+msgid "Scan Files"
+msgstr "Scan des fichiers"
+
+#: wpmc_settings.php:75
+msgid ""
+"The Uploads folder will be scanned.<br /><small>The files in your /uploads "
+"folder that don't seem being used in your WordPress will be marked as to be "
+"deleted. <b>If they are found in your Media Library, they will be considered "
+"as fine.</b></small>"
+msgstr ""
+"<p style=\"text-align: justify;\">Le dossier uploads du FTP sera scanné.</"
+"p>\n"
+"<p style=\"text-align: justify;\"><small>Les fichiers du dossier uploads qui "
+"seront inutilisés par vos billets, seront listés dans l'onglet \"Fichiers "
+"inutilisés\" (Médias > Media Cleaner). Si ils se trouvent dans votre "
+"bibliothèque de médias, les fichiers seront valides.<small></p>"
+
+#: wpmc_settings.php:81
+msgid "Resolve Shortcode"
+msgstr "Gestion des shortcodes"
+
+#: wpmc_settings.php:82
+#, php-format
+msgid ""
+"The shortcodes you are using in your posts and widgets will be resolved and "
+"checked.<br /><small>This process takes more resources. If the scanning "
+"suddenly stops, this might be the cause. Here is the list of the shortcodes "
+"enabled on your WordPress that you might be using: <b>%s</b>. Please note "
+"that the gallery shortcode is checked by the normal process. You don't need "
+"to have this option enabled for the WP gallery.</small>"
+msgstr ""
+"<p style=\"text-align: justify;\">WP Media Cleaner vérifiera les shortcodes "
+"que vous utilisez dans vos articles, dans vos pages et dans vos widgets. Ce "
+"processus de vérification nécessitera un peu plus de ressources que "
+"d'habitude. Si le scan s'arrête soudainement, merci de décocher cette "
+"option, d’enregistrer le paramètre et de relancer le processus.</p>\n"
+"<p style=\"text-align: justify;\"><small>Je vous présente la liste non-"
+"exhaustive des shortcodes qui pourraient être utilisés sur votre WordPress : "
+"%s.</small></p>\n"
+"<p style=\"text-align: justify;\"><small>A noter également qu'il est inutile "
+"de cocher cette option pour vérifier uniquement le shortcode \"gallery\" de "
+"WordPress.</small></p>"
+
+#: wpmc_settings.php:88
+msgid "UTF-8 Support"
+msgstr "Gestion de l'UTF-8"
+
+#: wpmc_settings.php:89
+msgid ""
+"The filenames in UTF-8 will not be skipped.<br /><small>PHP does not always "
+"work well with UTF-8 on all systems (Windows?). If the scanning suddenly "
+"stops, this might be the cause.</small>"
+msgstr ""
+"<p style=\"text-align: justify;\">Les noms de fichiers encodés en UTF-8 ne "
+"seront pas ignorés.</p>\n"
+"<p style=\"text-align: justify;\"><small>Le PHP ne fonctionne pas toujours "
+"correctement avec ce type d'encodage et le système Windows. Si le scan des "
+"fichiers s'arrête soudainement, cela signifierait qu'il y a un soucis avec "
+"le mode UTF-8 et que vous devez décocher cette option.</small></p>"
+
+#: wpmc_settings.php:95
+msgid "Hide Thumbnails"
+msgstr "Désactiver les miniatures"
+
+#: wpmc_settings.php:96
+msgid ""
+"Hide the thumbnails column.<br /><small>Useful if your WordPress if filled-"
+"up with huge images.</small>"
+msgstr ""
+"<p style=\"text-align: justify;\">Cacher la colonne des miniatures.</p>\n"
+"<p style=\"text-align: justify;\"><small>Cette option est utile si la taille "
+"de vos images est importante.</small></p>"
+
+#: wpmc_settings.php:105
+#, php-format
+msgid "Status: %s"
+msgstr "Statut : %s"
+
+#: wpmc_settings.php:110
+msgid "Serial"
+msgstr "Numéro de série"
+
+#: wpmc_settings.php:111
+msgid ""
+"<br />Enter your serial or subscription ID here. If you don't have one yet, "
+"get one <a target=\"_blank\" href=\"http://apps.meow.fr/wp-media-cleaner/"
+"\">right here</a>."
+msgstr ""
+"<p style=\"text-align: justify;\">Saisissez votre numéro de série dans la "
+"zone de texte située ci-dessus. Si vous ne possédez pas de clé de licence, "
+"merci de vous rendre sur <a href=\"http://apps.meow.fr/wp-media-cleaner/"
+"\">le site de l'auteur</a>.</p>"
+
+#~ msgid ""
+#~ "Scan is not enabled for neither the files or for the medias. The plugin "
+#~ "is basically disabled.<br /><b>Please check Settings > Media Cleaner</b>."
+#~ msgstr ""
+#~ "<p style=\"text-align: justify;\">Le scan n'est activé ni pour les "
+#~ "fichiers ni pour les médias. <strong>Merci de vérifier les paramètres de "
+#~ "WP Media Cleaner dans les options générales de WordPress (Réglages > "
+#~ "Media Cleaner)</strong>.</p>"
+
+#~ msgid "Basics"
+#~ msgstr "Options"
+
+#~ msgid "Pro"
+#~ msgstr "Pro"
+
+#~ msgid "Lists generated."
+#~ msgstr "Listes générées."
+
+#~ msgid "Related content or media not found."
+#~ msgstr "Pas de media associé, ni contenu."
+
+#~ msgid ""
+#~ "Be aware that a media will be considered <b>NOT</b> an issue <b>ONLY IF</"
+#~ "b> it is found in the Posts or Pages, and not in a Gallery. The deletion "
+#~ "of a media is also <b>PERMANENT</b>."
+#~ msgstr ""
+#~ "Attention, un media ne sera pas considéré comme un problème <b>seulement "
+#~ "dans le cas où</b> il est présent dans les Posts ou les Pages, mais pas "
+#~ "dans les Galleries ! La suppression des médias est aussi <b>irrémédiable</"
+#~ "b>."
+
+#~ msgid "The Media Library will be scanned."
+#~ msgstr "La Bibliothèque sera scannée."
+
+#~ msgid "The Uploads folder will be scanned."
+#~ msgstr "Les fichiers uploadés seront scannés."
 
 #~ msgid "The categories are both the same. Mmm. Please be careful!"
 #~ msgstr "Les catégories sont identiques... ohlala, faites-attention !"

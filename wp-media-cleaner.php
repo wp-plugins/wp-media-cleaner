@@ -3,7 +3,7 @@
 Plugin Name: WP Media Cleaner
 Plugin URI: http://www.meow.fr
 Description: Clean your Media Library and Uploads Folder.
-Version: 2.5.0
+Version: 2.6.0
 Author: Jordy Meow
 Author URI: http://www.meow.fr
 
@@ -160,11 +160,11 @@ function wpmc_wp_ajax_wpmc_get_all_issues () {
 function wpmc_get_original_images( $force = false ) {
 	global $wpmc_debug;
 	if ( $force ) {
-		delete_transient( "original_images" );
+		delete_transient( "wpmc_original_images" );
 		$original_images = null;
 	}
 	else {
-		$original_images = get_transient("original_images");
+		$original_images = get_transient( "wpmc_original_images" );
 	}
 	if ( !$original_images ) {
 		global $wpdb;
@@ -174,37 +174,36 @@ function wpmc_get_original_images( $force = false ) {
 			$source_path = str_replace('\\', '/', get_post_meta( $post_id, '_wp_attached_file', true ) );
 			$prepend_path = '';
 			$source_parts = explode('/', $source_path);
-			if (is_array($source_parts) && !empty($source_parts)) {
-				array_pop($source_parts); $prepend_path = implode('/', $source_parts).'/';
+			if ( is_array( $source_parts ) && !empty( $source_parts ) ) {
+				array_pop( $source_parts ); $prepend_path = implode( '/', $source_parts ) . '/';
 			}
 
 			$backup_sizes = get_post_meta( $post_id, '_wp_attachment_backup_sizes', true );
-			if ( is_array($backup_sizes) && !empty($backup_sizes) ) {
+			if ( is_array( $backup_sizes ) && !empty( $backup_sizes ) ) {
 				foreach( $backup_sizes as $key => $data) {
-					if (!empty($data['file'])) {
+					if ( !empty($data['file'] ) ) {
 						$original_images[] = $prepend_path.$data['file'];
 					}
 				}
 			}
 		}
-		if ($wpmc_debug) {
-			error_log('Original backup images: ');
-			error_log(var_export($original_images, true));
+		if ( $wpmc_debug ) {
+			error_log( 'Original backup images: ' );
+			error_log( var_export( $original_images, true ) );
 		}
 		wp_reset_postdata();
-
-		set_transient( "original_images", $original_images, 60 * 60 * 2 );
+		set_transient( "wpmc_original_images", $original_images, 60 * 60 * 2 );
 	}
 	return $original_images;
 }
 
 function wpmc_get_galleries_images( $force = false ) {
 	if ( $force ) {
-		delete_transient( "galleries_images" );
+		delete_transient( "wpmc_galleries_images" );
 		$galleries_images = null;
 	}
 	else {
-		$galleries_images = get_transient("galleries_images");
+		$galleries_images = get_transient("wpmc_galleries_images");
 	}
 	if ( !$galleries_images ) {
 		global $wpdb;
@@ -214,7 +213,7 @@ function wpmc_get_galleries_images( $force = false ) {
 			$galleries = get_post_galleries_images( $post );
 			foreach( $galleries as $gallery ) {
 				foreach( $gallery as $image ) {
-					array_push($galleries_images, $image);
+					array_push( $galleries_images, $image );
 				}
 			}
 		}
@@ -231,16 +230,16 @@ function wpmc_get_galleries_images( $force = false ) {
 		) );
 
 		foreach( (array) $post_galleries as $gallery_post ) {
-			$arrImages = get_children('post_type=attachment&post_mime_type=image&post_parent=' . $gallery_post->ID );
-			if ($arrImages) {
+			$arrImages = get_children( 'post_type=attachment&post_mime_type=image&post_parent=' . $gallery_post->ID );
+			if ( $arrImages ) {
 				foreach( (array) $arrImages as $image_post ) {
-					array_push($galleries_images, $image_post->guid);
+					array_push( $galleries_images, $image_post->guid );
 				}
 			}
 		}
 		wp_reset_postdata();
 
-		set_transient( "galleries_images", $galleries_images, 60 * 60 * 2 );
+		set_transient( "wpmc_galleries_images", $galleries_images, 60 * 60 * 2 );
 	}
 	return $galleries_images;
 }
@@ -603,12 +602,19 @@ function wpmc_check_db_has_content( $file ) {
 	$regex_match_file = '('.preg_quote($file).')';
 	$regex = addcslashes('=[\'"](?:(?:http(?:s)?\\:)?//'.preg_quote($parsedURL['host']).')?'.preg_quote($parsedURL['path']).'/'.$regex_match_file.'(?:\\?[^\'"]*)*[\'"]', '/');
 	$regex_mysql = str_replace('(?:', '(', $regex);
-
 	$sql = $wpdb->prepare( "SELECT COUNT(*) FROM $wpdb->posts WHERE post_type <> 'revision' AND post_type <> 'attachment' AND post_content REGEXP %s", $regex_mysql );
 	$mediaCount = $wpdb->get_var( $sql );
-	if ( $wpmc_debug && $mediaCount > 0 ) error_log("{$file} found in POST_CONTENT");
-	if ( $mediaCount > 0 ) return true;
+	if ( $wpmc_debug && $mediaCount > 0 )
+		error_log("{$file} found in POST_CONTENT");
+	if ( $mediaCount > 0 )
+		return true;
 
+	// Shortcode support is false by defaul
+	$shortcode_support = wpmc_getoption( 'shortcode', 'wpmc_basics', false );
+	if ( !$shortcode_support )
+		return false;
+
+	// Shortcode analysis
 	global $shortcode_tags;
 	$active_tags = array_keys( $shortcode_tags );
 	if ( !empty( $active_tags ) ) {
@@ -618,37 +624,34 @@ function wpmc_check_db_has_content( $file ) {
 			$query = array();
 			$query[] = "SELECT `ID`, `post_content` FROM {$wpdb->posts}";
 			$query[] = "WHERE post_type <> 'revision' AND post_type <> 'attachment'";
-
 			$sub_query = array();
 			if ( $wp_4dot0_plus ) {
-				foreach ($active_tags as $tag) {
+				foreach ( $active_tags as $tag ) {
 					$sub_query[] = "`post_content` LIKE '%[" .  esc_sql( $wpdb->esc_like( $tag ) ) . "%'";
 				}
-			} else {
-				foreach ($active_tags as $tag) {
+			}
+			else {
+				foreach ( $active_tags as $tag ) {
 					$sub_query[] = "`post_content` LIKE '%[" . like_escape( esc_sql( $tag ) ) . "%'";
 				}
 			}
-
 			$query[] = "AND (".implode(" OR ", $sub_query).")";
 			$sql = join(' ', $query);
-
 			$results = $wpdb->get_results( $sql );
-			foreach ($results as $key => $data) {
+			foreach ( $results as $key => $data ) {
 				$post_contents['post_'.$data->ID] = do_shortcode( $data->post_content );
 			}
-
 			global $wp_registered_widgets;
 			$active_widgets = get_option( 'sidebars_widgets' );
 			foreach ( $active_widgets as $sidebar_name => $sidebar_widgets ) {
-				if ($sidebar_name != 'wp_inactive_widgets' && !empty( $sidebar_widgets ) && is_array( $sidebar_widgets ) ) {
+				if ( $sidebar_name != 'wp_inactive_widgets' && !empty( $sidebar_widgets ) && is_array( $sidebar_widgets ) ) {
 					$i = 0;
-					foreach ($sidebar_widgets as $widget_instance) {
+					foreach ( $sidebar_widgets as $widget_instance ) {
 						$widget_class = $wp_registered_widgets[$widget_instance]['callback'][0]->option_name;
 						$instance_id = $wp_registered_widgets[$widget_instance]['params'][0]['number'];
 						$widget_data = get_option($widget_class);
-						if (!empty($widget_data[$instance_id]['text'])) {
-							$post_contents['widget_'.$i] = do_shortcode($widget_data[$instance_id]['text']);
+						if ( !empty( $widget_data[$instance_id]['text'] ) ) {
+							$post_contents['widget_'.$i] = do_shortcode( $widget_data[$instance_id]['text'] );
 						}
 						$i++;
 					}
@@ -663,7 +666,8 @@ function wpmc_check_db_has_content( $file ) {
 		if ( !empty( $post_contents ) ) {
 			foreach ( $post_contents as $key => $content ) {
 				$found = preg_match( '/' . $regex . '/i', $content );
-				if ( $wpmc_debug && $found ) error_log( "File Cleaner: {$file} found in {$key} SHORTCODE/WIDGET" );
+				if ( $wpmc_debug && $found )
+					error_log( "File Cleaner: {$file} found in {$key} SHORTCODE/WIDGET" );
 				if ( $found )
 					return true;
 			}
@@ -923,7 +927,6 @@ function wpmc_screen() {
 	?>
 	<div class='wrap'>
 		<?php jordy_meow_donation(); ?>
-		<div id="icon-upload" class="icon32"><br></div>
 		<h2>WP Media Cleaner <?php by_jordy_meow(); ?></h2>
 
 		<?php
@@ -1025,7 +1028,7 @@ function wpmc_screen() {
 					<input type="hidden" name="page" value="wp-media-cleaner">
 					<input type="hidden" name="view" value="<?php echo $view; ?>">
 					<input type="hidden" name="paged" value="<?php echo $paged; ?>">
-					<input type="submit" class="button" value="Search"><span style='border-right: #A2A2A2 solid 1px; margin-left: 5px; margin-right: 3px;'>&nbsp;</span>
+					<input type="submit" class="button" value="<?php _e( 'Search', 'wp-media-cleaner' ) ?>"><span style='border-right: #A2A2A2 solid 1px; margin-left: 5px; margin-right: 3px;'>&nbsp;</span>
 				</p>
 			</form>
 
@@ -1047,7 +1050,7 @@ function wpmc_screen() {
 
 				if ( !$scan_files && !$scan_media ) {
 					echo "<div class=\"error\"><p>";
-					_e( "Scan is not enabled for neither the files or for the medias. The plugin is basically disabled.<br /><b>Please check Settings > Media Cleaner</b>.", 'wp-media-cleaner' );
+					_e( "Scan is not enabled for neither the files or for the medias. The plugin is basically disabled. <b>Please check Settings > Media Cleaner</b>.", 'wp-media-cleaner' );
 					echo "</p></div>";
 				}
 				else if ( !wpmc_is_pro() ) {
@@ -1055,8 +1058,9 @@ function wpmc_screen() {
 					_e( "<b>This version is not Pro.</b> It will only let you delete the files <u><b>one by one</b></u>, for your safety. <b>If the plugin works perfectly for deleting the files one by one then you can <a href='http://apps.meow.fr/wp-media-cleaner'>get the PRO version</a></b>. It will let you delete all the files in one click.", 'wp-media-cleaner' );
 					echo "</p></div>";
 				}
+
+				echo sprintf( __( 'There are <b>%d issue(s)</b> with your files, accounting for <b>%d MB</b>. Your trash contains <b>%d MB.</b>', 'wp-media-cleaner' ), $issues_count, number_format( $total_size / 1000000, 2 ), number_format( $trash_total_size / 1000000, 2 ) );
 			?>
-			There are <b><?php echo $issues_count ?> issue(s)</b> with your files, accounting for <b><?php echo number_format( $total_size / 1000000, 2 )  ?> MB</b>. Your trash contains <b><?php echo number_format( $trash_total_size / 1000000, 2 )  ?> MB.</b>
 		</p>
 
 		<div id='wpmc-pages'>
@@ -1081,15 +1085,15 @@ function wpmc_screen() {
 
 			<thead>
 				<tr>
-					<th scope="col" id="cb" class="manage-column column-cb check-column"><input id="wpmc-cb-select-all" type="checkbox" <?php _e( wpmc_is_pro() ? '' : 'disabled' ) ?>></th>
+					<th scope="col" id="cb" class="manage-column column-cb check-column"><input id="wpmc-cb-select-all" type="checkbox" <?php echo ( wpmc_is_pro() ? '' : 'disabled' ) ?>></th>
 					<?php if ( !wpmc_getoption( 'hide_thumbnails', 'wpmc_basics', false ) ): ?>
-					<th style='width: 64px;'>Thumb</th>
+					<th style='width: 64px;'><?php _e( 'Thumb', 'wp-media-cleaner' ) ?></th>
 					<?php endif; ?>
-					<th style='width: 50px;'>Type</th>
-					<th style='width: 80px;'>Origin</th>
-					<th>Path</th>
-					<th style='width: 220px;'>Issue</th>
-					<th style='width: 80px; text-align: right;'>Size</th>
+					<th style='width: 50px;'><?php _e( 'Type', 'wp-media-cleaner' ) ?></th>
+					<th style='width: 80px;'><?php _e( 'Origin', 'wp-media-cleaner' ) ?></th>
+					<th><?php _e( 'Path', 'wp-media-cleaner' ) ?></th>
+					<th style='width: 220px;'><?php _e( 'Issue', 'wp-media-cleaner' ) ?></th>
+					<th style='width: 80px; text-align: right;'><?php _e( 'Size', 'wp-media-cleaner' ) ?></th>
 				</tr>
 			</thead>
 
@@ -1129,7 +1133,7 @@ function wpmc_screen() {
 				<?php if ( !wpmc_getoption( 'hide_thumbnails', 'wpmc_basics', false ) ): ?>
 				<th></th>
 				<?php endif; ?>
-				<th>Type</th><th>Origin</th><th>Path</th><th>Issue</th><th style='width: 80px; text-align: right;'>Size</th></tr>
+				<th><?php _e( 'Type', 'wp-media-cleaner' ) ?></th><th><?php _e( 'Origin', 'wp-media-cleaner' ) ?></th><th><?php _e( 'Path', 'wp-media-cleaner' ) ?></th><th><?php _e( 'Issue', 'wp-media-cleaner' ) ?></th><th style='width: 80px; text-align: right;'><?php _e( 'Size', 'wp-media-cleaner' ) ?></th></tr>
 			</tfoot>
 
 		</table>
@@ -1178,16 +1182,16 @@ function wpmc_validate_pro( $subscr_id ) {
 	$post = $client->getResponse();
 	if ( !$post['success'] ) {
 		if ( $post['message_code'] == "NO_SUBSCRIPTION" ) {
-			$status = __( "Your serial does not seem right." );
+			$status = __( "Your serial does not seem right.", 'wp-media-cleaner' );
 		}
 		else if ( $post['message_code'] == "NOT_ACTIVE" ) {
-			$status = __( "Your subscription is not active." );
+			$status = __( "Your subscription is not active.", 'wp-media-cleaner' );
 		}
 		else if ( $post['message_code'] == "TOO_MANY_URLS" ) {
-			$status = __( "Too many URLs are linked to your subscription." );
+			$status = __( "Too many URLs are linked to your subscription.", 'wp-media-cleaner' );
 		}
 		else {
-			$status = "There is a problem with your subscription.";
+			$status = __( "There is a problem with your subscription.", 'wp-media-cleaner' );
 		}
 		update_option( 'wpmc_pro_serial', "" );
 		update_option( 'wpmc_pro_status', $status );
@@ -1196,7 +1200,7 @@ function wpmc_validate_pro( $subscr_id ) {
 	}
 	set_transient( 'wpmc_validated', $subscr_id, 3600 * 24 * 100 );
 	update_option( 'wpmc_pro_serial', $subscr_id );
-	update_option( 'wpmc_pro_status', __( "Your subscription is enabled." ) );
+	update_option( 'wpmc_pro_status', __( "Your subscription is enabled.", 'wp-media-cleaner' ) );
 	return true;
 }
 
@@ -1258,5 +1262,5 @@ function wpmc_uninstall () {
 
 function wpmc_wp_enqueue_scripts () {
 	wp_enqueue_style( 'wp-media-cleaner-css', plugins_url( '/wp-media-cleaner.css', __FILE__ ) );
-	wp_enqueue_script( 'wp-media-cleaner', plugins_url( '/wp-media-cleaner.js', __FILE__ ), array( 'jquery' ), "1.0.0", true );
+	wp_enqueue_script( 'wp-media-cleaner', plugins_url( '/wp-media-cleaner.js', __FILE__ ), array( 'jquery' ), "2.6.0", true );
 }

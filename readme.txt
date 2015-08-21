@@ -3,8 +3,8 @@ Contributors: TigrouMeow
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=H2S7S3G4XMJ6J
 Tags: management, admin, file, files, images, image, media, libary, upload, clean, cleaning
 Requires at least: 3.5
-Tested up to: 4.2.0
-Stable tag: 2.5.0
+Tested up to: 4.3
+Stable tag: 2.6.0
 
 Clean your Media Library and Uploads directory from the files which are not used.
 
@@ -59,6 +59,10 @@ Please avoid contacting me directly. Write about your issue here: https://github
 1. Media -> Media Cleaner
 
 == Changelog ==
+
+= 2.6.0 =
+* Add: Option for resolving shortcode during analysis.
+* Update: French translation. Big thanks to Guillaume (and also for all his testing!).
 
 = 2.5.0 =
 * Add: Delete the unused directories.
