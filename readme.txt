@@ -51,9 +51,6 @@ Donations can be made through Paypal here: https://www.paypal.com/cgi-bin/webscr
 = I donated, can I get rid of the donation button? =
 Of course. I don't like to see too many of those buttons neither ;) You can disable the donation buttons from all my plugins by adding this to your wp-config.php: `define('WP_HIDE_DONATION_BUTTONS', true);`
 
-= Can I contact you? =
-Please avoid contacting me directly. Write about your issue here: https://github.com/tigroumeow/wp-media-cleaner/issues. The contributors and I will have a look at it. The more details, the better :)
-
 == Screenshots ==
 
 1. Media -> Media Cleaner
